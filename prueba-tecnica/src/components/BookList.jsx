@@ -4,7 +4,7 @@ import BookCard from "./BookCard";
 
 function BookList(props) {
   // DESESTRUCTURACIÓN: Extraemos las props de forma limpia.
-  const { selectedBook } = props;
+  const { selectedBook, setSelectedBook } = props;
 
   // Por ahora los datos estan fijos "hardcoded". En el siguiente commit
   // utilizaremos useEffect para traer estos datos desde el JSON externo
@@ -124,7 +124,7 @@ function BookList(props) {
       <BookCard
         key={book.isbn}
         book={book}
-        selectedBook={selectedBook}
+        setSelectedBook={setSelectedBook}
       ></BookCard>
     );
   });
