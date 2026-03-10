@@ -1,0 +1,12 @@
+# Node / React
+node_modules/
+.eslintcache
+build/
+dist/
+
+# Symfony
+/vendor/
+/var/
+.env.local
+.env.*.local
+/public/bundles/
