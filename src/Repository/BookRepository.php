@@ -16,6 +16,16 @@ class BookRepository extends ServiceEntityRepository
         parent::__construct($registry, Book::class);
     }
 
+    public function findBefore2013(){
+        return $this->getEntityManager()->createQuery('
+            SELECT book 
+            FROM App\Entity\Book book
+            WHERE book.published < :fecha
+        ')
+        ->setParameter('fecha', '2013-01-01 00:00:00')
+        ->getResult();
+    }
+
     //    /**
     //     * @return Book[] Returns an array of Book objects
     //     */
