@@ -7,7 +7,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Book;
+use App\Form\BookType;
 use DateTimeImmutable;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Constraints\DateTime;
 
@@ -25,7 +27,10 @@ final class BookController extends AbstractController
     {
         $books = $this->em->getRepository(Book::class)->findAll();
         
-        return $this->json($books);   
+        // return $this->json($books);   
+        return $this->render('base.html.twig',[
+            'books' => $books,
+        ]);
     }
 
     #[Route('/book/antes2013', name: 'libros2013')]
@@ -67,6 +72,24 @@ final class BookController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(['Libro añadido con  éxito' => true]);
+    }
+
+    #[Route('/book/anadirF', name: 'anadir_libro_formulario')]
+    public function anadir_libro_formulario(Request $request): Response {
+        $book = new Book();
+        $formularioLibro = $this->createForm(BookType::class, $book);
+        $formularioLibro->handleRequest($request);
+        
+        if ($formularioLibro->isSubmitted() && $formularioLibro->isValid()) { 
+            $this->em->persist($book);
+            $this->em->flush();
+            
+            return $this->redirectToRoute('app_book');
+        }
+
+        return $this->render('book/index.html.twig', [ 
+            'formularioLibro' => $formularioLibro->createView(),
+        ]);
     }
     
     #[Route('/book/delete/{isbn}', name: 'borrar_libro')]
