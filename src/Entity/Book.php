@@ -52,8 +52,18 @@ class Book
     #[ORM\OneToMany(targetEntity: Image::class, mappedBy: 'relation')]
     private Collection $images;
 
-    public function __construct()
+    public function __construct($isbn = null, $title = null, $subtitle = null, $author = null, $published = null, $publisher = null, $pages = null, $description = null, $website = null, $category = null)
     {
+        $this->isbn = $isbn;
+        $this->title = $title;
+        $this->subtitle = $subtitle;
+        $this->author = $author;
+        $this->published = $published;
+        $this->publisher = $publisher;
+        $this->pages = $pages;
+        $this->description = $description;
+        $this->website = $website;
+        $this->category = $category;
         $this->images = new ArrayCollection();
     }
 
