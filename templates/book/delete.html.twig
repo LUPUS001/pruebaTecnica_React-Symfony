@@ -1,0 +1,14 @@
+<form id="delete-form">
+  <button type="submit">Borrar libro</button>
+</form>
+
+<script>
+  document.getElementById('delete-form').addEventListener('submit', function(e) {
+    e.preventDefault(); // evitar envío normal
+
+    fetch('/book/delete/9781617295850', { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => alert('Libro borrado: ' + data.title))
+      .catch(() => alert('Error al borrar'));
+  });
+</script>
