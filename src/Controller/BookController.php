@@ -24,17 +24,7 @@ final class BookController extends AbstractController
     public function index(): Response
     {
         $books = $this->em->getRepository(Book::class)->findAll();
-        
-        $data = [];
-        foreach ($books as $book) {
-            $data[] = [
-                'id' => $book->getId(),
-                'isbn' => $book->getIsbn(),
-                'title' => $book->getTitle(),
-                'author' => $book->getAuthor(),
-                'category' => $book->getCategory(),
-            ];
-        }
+        $data = array_map(fn(Book $book) => $book->toArray(), $books);
 
         return new JsonResponse($data);
     }
@@ -43,17 +33,7 @@ final class BookController extends AbstractController
     public function libros2013(): Response
     {    
         $books = $this->em->getRepository(Book::class)->findBefore2013();
-           
-        $data = [];
-        foreach ($books as $book) {
-            $data[] = [
-                'id' => $book->getId(),
-                'isbn' => $book->getIsbn(),
-                'title' => $book->getTitle(),
-                'author' => $book->getAuthor(),
-                'category' => $book->getCategory(),
-            ];
-        }
+        $data = array_map(fn(Book $book) => $book->toArray(), $books);
 
         return new JsonResponse($data);
     }
@@ -62,17 +42,7 @@ final class BookController extends AbstractController
     public function drama_book(): Response
     {
         $books = $this->em->getRepository(Book::class)->findBy(['category' => 'Drama']);
-
-        $data = [];
-        foreach ($books as $book) {
-            $data[] = [
-                'id' => $book->getId(),
-                'isbn' => $book->getIsbn(),
-                'title' => $book->getTitle(),
-                'author' => $book->getAuthor(),
-                'category' => $book->getCategory(),
-            ];
-        }
+        $data = array_map(fn(Book $book) => $book->toArray(), $books);
 
         return new JsonResponse($data);
     }
@@ -146,28 +116,6 @@ final class BookController extends AbstractController
             return new JsonResponse(['error' => 'Libro no encontrado'], 404);
         }
 
-        $images = [];
-        foreach ($book->getImages() as $image) {
-            $images[] = [
-                'id' => $image->getId(),
-                'ruta' => $image->getRutaArchivo()
-            ];
-        }
-        
-        return new JsonResponse([
-            'id' => $book->getId(),
-            'isbn' => $book->getIsbn(),
-            'title' => $book->getTitle(),
-            'subtitle' => $book->getSubtitle(),
-            'author' => $book->getAuthor(),
-            'published' => $book->getPublished()->format('Y-m-d'),
-            'publisher' => $book->getPublisher(),
-            'pages' => $book->getPages(),
-            'description' => $book->getDescription(),
-            'website' => $book->getWebsite(),
-            'category' => $book->getCategory(),
-            'total_images' => count($images),
-            'images' => $images
-        ]);
+        return new JsonResponse($book->toArray());
     }
 }

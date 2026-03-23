@@ -221,4 +221,31 @@ class Book
 
         return $this;
     }
+
+    public function toArray(): array
+    {
+        $images = [];
+        foreach ($this->getImages() as $image) {
+            $images[] = [
+                'id' => $image->getId(),
+                'ruta' => $image->getRutaArchivo(),
+            ];
+        }
+
+        return [
+            'id' => $this->getId(),
+            'isbn' => $this->getIsbn(),
+            'title' => $this->getTitle(),
+            'subtitle' => $this->getSubtitle(),
+            'author' => $this->getAuthor(),
+            'published' => $this->getPublished() ? $this->getPublished()->format('Y-m-d') : null,
+            'publisher' => $this->getPublisher(),
+            'pages' => $this->getPages(),
+            'description' => $this->getDescription(),
+            'website' => $this->getWebsite(),
+            'category' => $this->getCategory(),
+            'total_images' => count($images),
+            'images' => $images,
+        ];
+    }
 }
