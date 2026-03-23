@@ -16,38 +16,63 @@ class BookRepository extends ServiceEntityRepository
         parent::__construct($registry, Book::class);
     }
 
-    public function findBefore2013(){
+    public function findBefore2013()
+    {
         return $this->getEntityManager()->createQuery('
             SELECT book 
             FROM App\Entity\Book book
             WHERE book.published < :fecha
         ')
-        ->setParameter('fecha', '2013-01-01 00:00:00')
-        ->getResult();
+            ->setParameter('fecha', '2013-01-01 00:00:00')
+            ->getResult();
     }
 
-    //    /**
-    //     * @return Book[] Returns an array of Book objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('b')
-    //            ->andWhere('b.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('b.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function findBookImagen($isbn)
+    {
+        /* 
+        ESTA ERA LA FORMA CON DQL (STRING):
+        return $this->getEntityManager()->createQuery('
+            SELECT book
+            FROM App\Entity\Book book 
+            LEFT JOIN FETCH book.images
+            WHERE book.isbn = :isbn
+        ')
+        ->setParameter('isbn', $isbn)
+        ->getOneOrNullResult(); 
+        */
 
-    //    public function findOneBySomeField($value): ?Book
-    //    {
-    //        return $this->createQueryBuilder('b')
-    //            ->andWhere('b.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        // ESTA ES LA FORMA CON QUERY BUILDER (MÁS SEGURA Y ESTÁNDAR):
+        return $this->createQueryBuilder('book')
+            ->leftJoin('book.images', 'images')
+            ->addSelect('images')
+            ->where('book.isbn = :isbn')
+            ->setParameter('isbn', $isbn)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+//    /**
+//     * @return Book[] Returns an array of Book objects
+//     */
+//    public function findByExampleField($value): array
+//    {
+//        return $this->createQueryBuilder('b')
+//            ->andWhere('b.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->orderBy('b.id', 'ASC')
+//            ->setMaxResults(10)
+//            ->getQuery()
+//            ->getResult()
+//        ;
+//    }
+
+//    public function findOneBySomeField($value): ?Book
+//    {
+//        return $this->createQueryBuilder('b')
+//            ->andWhere('b.exampleField = :val')
+//            ->setParameter('val', $value)
+//            ->getQuery()
+//            ->getOneOrNullResult()
+//        ;
+//    }
 }

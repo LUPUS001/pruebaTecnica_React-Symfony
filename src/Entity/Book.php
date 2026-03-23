@@ -49,7 +49,7 @@ class Book
     /**
      * @var Collection<int, Image>
      */
-    #[ORM\OneToMany(targetEntity: Image::class, mappedBy: 'relation')]
+    #[ORM\OneToMany(targetEntity: Image::class, mappedBy: 'book')]
     private Collection $images;
 
     public function __construct($isbn = null, $title = null, $subtitle = null, $author = null, $published = null, $publisher = null, $pages = null, $description = null, $website = null, $category = null)

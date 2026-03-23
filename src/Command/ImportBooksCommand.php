@@ -65,30 +65,46 @@ class ImportBooksCommand extends Command
            $existing = $this->entityManager->getRepository(Book::class)
                ->findOneBy(['isbn' => $individualBookData['isbn']]);
 
-           if ($existing) {
-               continue;
-           }
-           /*.. OPCIONAL*/
+            if (!$existing) {
+                $book = new Book();
+                $book->setIsbn($individualBookData['isbn']);
+                $book->setTitle($individualBookData['title']);
+                $book->setSubtitle($individualBookData['subtitle'] ?? null);
+                $book->setAuthor($individualBookData['author']);
+                $book->setPublished(new \DateTimeImmutable($individualBookData['published']));
+                $book->setPublisher($individualBookData['publisher']);
+                $book->setPages($individualBookData['pages']);
+                $book->setDescription($individualBookData['description']);
+                $book->setWebsite($individualBookData['website'] ?? null);
+                $book->setCategory($individualBookData['category']);
+                $this->entityManager->persist($book);
+            } else {
+                $book = $existing;
+            }
 
-           $book = new Book();
-           // 2. Creo una nueva entidad Book (un nuevo objeto para guardar en la BD)
-          
-           $book->setIsbn($individualBookData['isbn']);
-           $book->setTitle($individualBookData['title']);
-           $book->setSubtitle($individualBookData['subtitle'] ?? null);
-           $book->setAuthor($individualBookData['author']);
-           $book->setPublished(new \DateTimeImmutable($individualBookData['published']));
-           $book->setPublisher($individualBookData['publisher']);
-           $book->setPages($individualBookData['pages']);
-           $book->setDescription($individualBookData['description']);
-           $book->setWebsite($individualBookData['website'] ?? null);
-           $book->setCategory($individualBookData['category']);
-           // 3. Seteo (asignar) las propiedades del libro con los datos que vienen en el JSON para ese libro
+            // COMPROBAR SI EXISTEN IMÁGENES PARA ESTE LIBRO
+            $publicPath = __DIR__ . '/../../public/';
+            $imageFiles = glob($publicPath . 'images/' . $individualBookData['isbn'] . '*.*');
 
+            foreach ($imageFiles as $absolutePath) {
+                $imagePath = 'images/' . basename($absolutePath);
+                
+                // Evitar duplicados de imágenes si ya está enlazada
+                $imageExists = false;
+                foreach ($book->getImages() as $existingImg) {
+                    if ($existingImg->getRutaArchivo() === $imagePath) {
+                        $imageExists = true;
+                        break;
+                    }
+                }
 
-           $this->entityManager->persist($book);
-           // 4. Le digo a Doctrine que prepare este objeto Book para guardarlo en la base de datos (no se guarda aún, solo se marca para guardar)
-          
+                if (!$imageExists) {
+                    $image = new \App\Entity\Image();
+                    $image->setRutaArchivo($imagePath);
+                    $image->setBook($book);
+                    $this->entityManager->persist($image);
+                }
+            }
            /*
            //ESTO SERÍA EN EL CASO DE QUE NUESTRO JSON TUVIERA UN CAMPO LLAMADO IMAGES, PERO NO ES EL CASO
            // 5. Recorrer los libros y persistirlos en la base de datos
