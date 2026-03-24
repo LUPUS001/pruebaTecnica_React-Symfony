@@ -51,26 +51,37 @@ final class BookController extends AbstractController
 
     // Webservices REST que permiten Create y Delete
     
-    #[Route('/book/anadir', name: 'anadir_libro')]
-    public function anadir_libro(): Response {
+    #[Route('/book/anadir', name: 'anadir_libro', methods: ['POST'])]
+    public function anadir_libro(Request $request): Response {
+        $data = $request->toArray();
+
         $book = new Book(
-            '9781506711980',
-            'Berserk Deluxe Edition Volume 1',
-            'The Black Swordsman & The Brand of Sacrifice',
-            'Kentaro Miura',
-            new \DateTimeImmutable('2019-03-26T00:00:00.000Z'),
-            'Dark Horse Manga', 
-            692, 
-            'The reigning king of adult fantasy manga now in deluxe 7x10 hardcover editions! Born in tragedy, raised in abuse and neglect, Guts is a hardened warrior who seeks revenge against his former mentor.', 
-            'https://www.darkhorse.com/Books/3003-631/Berserk-Deluxe-Edition-Volume-1-HC', 
-            'Dark Fantasy'
+            $data['isbn'] ?? null,
+            $data['title'] ?? null,
+            $data['subtitle'] ?? null,
+            $data['author'] ?? null,
+            isset($data['published']) ? new \DateTimeImmutable($data['published']) : new \DateTimeImmutable(),
+            $data['publisher'] ?? null,
+            $data['pages'] ?? 0,
+            $data['description'] ?? null,
+            $data['website'] ?? null,
+            $data['category'] ?? null
         );
 
         $this->em->persist($book);
         $this->em->flush();
 
-        return new JsonResponse(['Libro añadido con éxito' => true, 'Titulo' => $book->getTitle()]);
+        return new JsonResponse(['Libro añadido con éxito' => true, 'Titulo' => $book->getTitle()], 201);
     }
+
+    /*#[Route('/book/anadir', name: 'anadir_libro')]
+    public function anadir_libro(): Response {
+        $book = new Book('9781506711980','Berserk Deluxe Edition Volume 1','The Black Swordsman & The Brand of Sacrifice','Kentaro Miura',new \DateTimeImmutable('2019-03-26T00:00:00.000Z'),'Dark Horse Manga', 692, 'The reigning king of adult fantasy manga now in deluxe 7x10 hardcover editions! Born in tragedy, raised in abuse and neglect, Guts is a hardened warrior who seeks revenge against his former mentor.', 'https://www.darkhorse.com/Books/3003-631/Berserk-Deluxe-Edition-Volume-1-HC', 'Dark Fantasy');
+        $this->em->persist($book);
+        $this->em->flush();
+
+        return new JsonResponse(['Libro añadido con éxito' => true, 'Titulo' => $book->getTitle()]);
+    }*/
 
     #[Route('/book/anadirF', name: 'anadir_libro_formulario')]
     public function anadir_libro_formulario(Request $request): Response {
@@ -90,7 +101,7 @@ final class BookController extends AbstractController
         ]);
     }
     
-    #[Route('/book/delete/{isbn}', name: 'borrar_libro')]
+    #[Route('/book/delete/{isbn}', name: 'borrar_libro', methods: ['DELETE'])]
     public function borrar_libro($isbn): Response {
         $bookDelete = $this->em->getRepository(Book::class)->findOneBy(['isbn' => $isbn]);
 
