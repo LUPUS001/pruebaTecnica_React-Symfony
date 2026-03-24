@@ -25,25 +25,25 @@ class Book
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $subtitle = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $author = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $published = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $publisher = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?int $pages = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $website = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $category = null;
 
     /**
