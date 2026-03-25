@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ###> symfony/framework-bundle ###
 /.env.local
@@ -20,3 +21,17 @@
 /public/assets/
 /assets/vendor/
 ###< symfony/asset-mapper ###
+=======
+# Node / React
+node_modules/
+.eslintcache
+build/
+dist/
+
+# Symfony
+/vendor/
+/var/
+.env.local
+.env.*.local
+/public/bundles/
+>>>>>>> origin_react/main

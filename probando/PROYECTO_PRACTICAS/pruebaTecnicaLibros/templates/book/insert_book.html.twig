@@ -1,0 +1,82 @@
+{# Versión funcional un poco HTML#}
+<form action="{{ path('insert_book2') }}" method="POST">
+    <button type="submit">Ejecutar POST</button>
+</form> 
+
+{# VERSIÓN PRO CON HTML #}
+{# <!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insertar Nuevo Libro</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .book-form { max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { background: #007bff; color: white; border: none; padding: 10px 15px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="book-form">
+        <h1>Insertar Nuevo Libro</h1>
+        
+        <form action="{{ path('insert_book') }}" method="POST">
+            <div class="form-group">
+                <label for="isbn">ISBN:</label>
+                <input type="text" id="isbn" name="isbn" value="9781617295850" required>
+            </div>
+
+            <div class="form-group">
+                <label for="title">Título:</label>
+                <input type="text" id="title" name="title" value="Grokking Algorithms" required>
+            </div>
+
+            <div class="form-group">
+                <label for="subtitle">Subtítulo:</label>
+                <input type="text" id="subtitle" name="subtitle" value="An Illustrated Guide for Programmers and Other Curious People">
+            </div>
+
+            <div class="form-group">
+                <label for="author">Autor:</label>
+                <input type="text" id="author" name="author" value="Aditya Bhargava" required>
+            </div>
+
+            <div class="form-group">
+                <label for="published">Fecha de publicación:</label>
+                <input type="datetime-local" id="published" name="published" value="2016-05-01T00:00" required>
+            </div>
+
+            <div class="form-group">
+                <label for="publisher">Editorial:</label>
+                <input type="text" id="publisher" name="publisher" value="Manning Publications" required>
+            </div>
+
+            <div class="form-group">
+                <label for="pages">Páginas:</label>
+                <input type="number" id="pages" name="pages" value="256" required>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Descripción:</label>
+                <textarea id="description" name="description" rows="4" required>Grokking Algorithms is a friendly take on this core computer science topic. In it, you'll learn how to apply common algorithms to the practical problems you face every day as a programmer.</textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="website">Website:</label>
+                <input type="url" id="website" name="website" value="https://www.manning.com/books/grokking-algorithms">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Categoría:</label>
+                <input type="text" id="category" name="category" value="Computer Science" required>
+            </div>
+
+            <button type="submit">Guardar Libro</button>
+        </form>
+    </div>
+</body>
+</html> #}
