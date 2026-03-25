@@ -109,10 +109,16 @@ final class BookController extends AbstractController
             return new JsonResponse(['error' => 'Libro no encontrado'], 404);
         }
 
+        // Primero eliminamos las imágenes asociadas para evitar el error de clave foránea
+        foreach ($bookDelete->getImages() as $image) {
+            $this->em->remove($image);
+        }
+
+        $title = $bookDelete->getTitle();
         $this->em->remove($bookDelete);
         $this->em->flush();
 
-        return new JsonResponse(['Libro borrado con éxito' => true, 'Titulo' => $bookDelete->getTitle()]);
+        return new JsonResponse(['Libro borrado con éxito' => true, 'Titulo' => $title]);
     }
 
 
