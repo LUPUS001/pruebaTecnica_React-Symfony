@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 import BookList from "./components/BookList";
+import BookAdd from "./components/BookAdd";
 
 function App() {
   const [books, setBooks] = useState([]);
@@ -13,6 +14,26 @@ function App() {
       setBooks(data);
     } catch (error) {
       console.error("Error fetching books:", error);
+    }
+  };
+
+  const fetchBooksBefore2013 = async () => {
+    try {
+      const response = await fetch("/book/antes2013");
+      const data = await response.json();
+      setBooks(data);
+    } catch (error) {
+      console.error("Error fetching books:", error);
+    }
+  };
+
+  const fetchDramaBooks = async () => {
+    try {
+      const response = await fetch("/book/drama");
+      const data = await response.json();
+      setBooks(data);
+    } catch (error) {
+      console.error("Error fetching drama books:", error);
     }
   };
 
@@ -44,6 +65,16 @@ function App() {
           <p>Selecciona un libro en la parrilla para ver más información.</p>
         )}
       </header>
+
+      <section style={{ marginBottom: "20px" }}>
+        <h4 style={{ margin: "0 0 10px 0" }}>Filtrar Catálogo:</h4>
+        <button onClick={fetchAllBooks} style={{ marginRight: "10px" }}>Todos</button>
+        <button onClick={fetchBooksBefore2013} style={{ marginRight: "10px" }}>Antes de 2013</button>
+        <button onClick={fetchDramaBooks}>Libros de Drama</button>
+      </section>
+
+      <BookAdd setBooks={setBooks} />
+      <hr />
 
       <BookList books={books} setSelectedBook={setSelectedBook} />
     </div>
