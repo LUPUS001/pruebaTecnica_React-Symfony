@@ -76,7 +76,7 @@ function App() {
       <BookAdd setBooks={setBooks} />
       <hr />
 
-      <BookList books={books} setSelectedBook={setSelectedBook} />
+      <BookList books={books} setBooks={setBooks} setSelectedBook={setSelectedBook} />
     </div>
   );
 }
