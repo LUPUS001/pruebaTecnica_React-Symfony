@@ -1,9 +1,11 @@
 function BookCard(props) {
-  const { book } = props;
+  const { book, setSelectedBook } = props;
 
   return (
     <li 
+      onClick={() => setSelectedBook(book)}
       style={{ 
+        cursor: "pointer",
         border: "1px solid #ddd", 
         padding: "15px", 
         margin: "10px", 

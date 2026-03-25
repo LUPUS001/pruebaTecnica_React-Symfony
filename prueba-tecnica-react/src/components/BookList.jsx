@@ -2,7 +2,7 @@ import BookCard from "./BookCard";
 
 // El componente BookList recibe la lista de libros desde App.jsx a través de props.
 function BookList(props) {
-  const { books } = props;
+  const { books, setSelectedBook } = props;
 
   // Recorremos el array de libros que viene de App.jsx
   const bookCard = books.map((book, index) => {
@@ -10,6 +10,7 @@ function BookList(props) {
       <BookCard 
         key={index} 
         book={book} 
+        setSelectedBook={setSelectedBook}
       />
     );
   });
