@@ -1,18 +1,9 @@
 {
     "intelephense.environment.phpVersion": "8.4",
     "files.exclude": {
-        "**/var/**": true,
-        "**/vendor/**": true,
-        "**/node_modules/**": true
     },
     "search.exclude": {
-        "**/var/**": true,
-        "**/vendor/**": true,
-        "**/node_modules/**": true
     },
     "intelephense.files.exclude": [
-        "**/var/**",
-        "**/vendor/**",
-        "**/node_modules/**"
     ]
 }
