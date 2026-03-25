@@ -46,10 +46,25 @@ class ImportController extends AbstractController
             // Campos opcionales (usamos ?? null para evitar errores si no vienen en el JSON) 
             $book->setWebsite($data['website'] ?? null);
 
-            // 4. Creamos una imagen de muestra para el libro usando Open Library (basado en ISBN)
-            // Esto asegura que la parrilla se vea visualmente atractiva como pide el test
+            // 4. Priorizamos la imagen local si existe 
+            $isbn = $data['isbn'];
+            $localImagePath = "/images/{$isbn}.jpg";
+            $publicPath = $this->getParameter('kernel.project_dir') . '/public' . $localImagePath;
+
+            // También probamos con .png si .jpg no existe
+            if (!file_exists($publicPath)) {
+                $localImagePath = "/images/{$isbn}.png";
+                $publicPath = $this->getParameter('kernel.project_dir') . '/public' . $localImagePath;
+            }
+
             $image = new Image();
-            $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$data['isbn']}-L.jpg");
+            if (file_exists($publicPath)) {
+                $image->setRutaArchivo($localImagePath);
+            } else {
+                // Si no hay local, usamos Open Library
+                $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$isbn}-L.jpg");
+            }
+            
             $image->setBook($book);
 
             $entityManager->persist($book); 
