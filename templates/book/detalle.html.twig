@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello BookController!{% endblock %}
+
+{% block body %}
+    <h1>Detalles del Libro: {{ book.title }}</h1>
+
+    <ul>
+        <li>ISBN: {{ book.isbn }}</li>
+        <li>Categoría: {{ book.category }}</li>
+        {# Requisito de Orbys: Mostrar el número de imágenes #}
+        <li>Total de imágenes asociadas: {{ book.images|length }}</li>
+    </ul>
+
+    <h3>Galería de imágenes:</h3>
+    <div class="gallery">
+        {% for image in book.images %}
+            <img src="{{ asset(image.rutaArchivo) }}" width="150" style="margin: 5px; border: 1px solid #ccc;">
+        {% else %}
+            <p>Este libro no tiene imágenes asignadas.</p>
+        {% endfor %}
+    </div>
+{% endblock %}
