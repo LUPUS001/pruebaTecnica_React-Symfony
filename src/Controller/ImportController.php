@@ -67,6 +67,7 @@ class ImportController extends AbstractController
             
             $image->setBook($book);
 
+
             $entityManager->persist($book); 
             $entityManager->persist($image);
         }

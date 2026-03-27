@@ -1,62 +1,175 @@
-.books-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-  list-style: none;
+/* App CSS */
+.app-header {
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
 }
 
+.no-image-placeholder {
+    width: 150px;
+    height: 180px;
+    background-color: #ccc;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.filter-button {
+    margin-right: 10px;
+}
+
+/* BookAdd CSS */
+.book-add-container {
+    padding: 20px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+.book-add-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.book-add-button {
+    background-color: black;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+/* BookList CSS */
+.books-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+    list-style: none;
+}
+/* .book-card-delete-button {
+  margin-top: 10px;
+  background-color: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+} */
+
 .books-grid li {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .books-grid li:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
 }
 
-/* #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+/* App Header & Details */
+.app-header {
+    padding: 20px;
+    background-color: #f0f0f0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 20px;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.selected-book-image-container {
+    flex: 1;
+    text-align: center;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.selected-book-image {
+    width: 150px;
+    border-radius: 4px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.selected-book-info {
+    flex: 2;
 }
 
-.card {
-  padding: 2em;
+/* Filter Section */
+.filter-section {
+    margin-bottom: 20px;
 }
 
-.read-the-docs {
-  color: #888;
+.filter-title {
+    margin: 0 0 10px 0;
 }
- */
+
+/* BookCard Component Styles */
+.book-card-item {
+    cursor: pointer;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin: 10px;
+    list-style: none;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.book-card-image-container {
+    width: 80px;
+    height: 110px;
+    background-color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.book-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-card-placeholder-text {
+    font-size: 10px;
+    color: #999;
+}
+
+.book-card-info {
+    flex: 1;
+}
+
+.book-card-title {
+    margin: 0 0 5px 0;
+    font-size: 1.1em;
+}
+
+.book-card-subtitle {
+    margin: 0 0 5px 0;
+    color: #666;
+}
+
+.book-card-author {
+    margin: 0;
+    font-size: 0.9em;
+}
+
+.book-card-delete-button {
+    margin-top: 10px;
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
