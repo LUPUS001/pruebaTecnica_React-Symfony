@@ -228,7 +228,7 @@ class Book
         foreach ($this->getImages() as $image) {
             $images[] = [
                 'id' => $image->getId(),
-                'ruta' => $image->getRutaArchivo(),
+                'ruta_archivo' => $image->getRutaArchivo(),
             ];
         }
 

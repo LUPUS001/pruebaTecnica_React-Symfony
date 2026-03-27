@@ -1,0 +1,114 @@
+
+ [INFO] Limpieza de base 
+        de datos         
+        completada.      
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81593275846.jpg
+
+ ! [NOTE] Found! Chose:  
+ !        /images/9781593
+ !        275846.jpg     
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81449331818.jpg
+
+ ! [NOTE] Found! Chose:  
+ !        /images/9781449
+ !        331818.jpg     
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81449365035.jpg
+
+ ! [NOTE] Found! Chose:  
+ !        /images/9781449
+ !        365035.jpg     
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81491950296.jpg
+
+ ! [NOTE] Found! Chose:  
+ !        /images/9781491
+ !        950296.jpg     
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81593277574.jpg
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81593277574.jpe
+ !        g              
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81593277574.png
+
+ ! [NOTE] Found! Chose:  
+ !        /images/9781593
+ !        277574.png     
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81491904244.jpg
+
+ ! [NOTE] Found! Chose:  
+ !        /images/9781491
+ !        904244.jpg     
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81449325862.jpg
+
+ ! [NOTE] Found! Chose:  
+ !        /images/9781449
+ !        325862.jpg     
+
+ ! [NOTE] Checking file: 
+ !        /home/usuario/I
+ !        mágenes/pruebaT
+ !        ecnicaSymfony/p
+ !        ublic/images/97
+ !        81449337711.jpg
+
+ ! [NOTE] Found! Chose:  
+ !        /images/9781449
+ !        337711.jpg     
+
+ [OK] Importación de     
+      libros completado  
+      con éxito          
+      (incluyendo        
+      portadas).         
+

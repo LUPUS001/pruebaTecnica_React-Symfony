@@ -64,12 +64,35 @@ class ImportBooksCommand extends Command
             $book->setCategory($individualBookData['category']);
             $this->entityManager->persist($book);
 
-            // --- ASIGNACION AUTOMÁTICA DE PORTADA (Open Library) ---
-            $image = new Image();
-            $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$individualBookData['isbn']}-L.jpg");
-            $image->setBook($book);
-            $this->entityManager->persist($image);
-       }
+             // --- ASIGNACION AUTOMÁTICA DE PORTADA (Local or Open Library) ---
+             $isbn = $individualBookData['isbn'];
+             $suffixes = ['', '_2'];
+             $extensions = ['jpg', 'png', 'jpeg', 'webp'];
+             $projectDir = realpath(__DIR__ . '/../../');
+             $hasLocalImages = false;
+             
+             foreach ($suffixes as $suffix) {
+                 foreach ($extensions as $ext) {
+                     $localPath = "/images/{$isbn}{$suffix}.{$ext}";
+                     $fullPath = $projectDir . '/public' . $localPath;
+
+                     if (file_exists($fullPath)) {
+                         $image = new Image();
+                         $image->setRutaArchivo($localPath);
+                         $image->setBook($book);
+                         $this->entityManager->persist($image);
+                         $hasLocalImages = true;
+                     }
+                 }
+             }
+
+             if (!$hasLocalImages) {
+                $image = new Image();
+                $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$isbn}-L.jpg");
+                $image->setBook($book);
+                $this->entityManager->persist($image);
+             }
+        }
 
        $this->entityManager->flush();
        $io->success('Importación de libros completado con éxito (incluyendo portadas).');

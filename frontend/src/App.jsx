@@ -50,7 +50,7 @@ function App() {
                         selectedBook.images.length > 0 ? (
                             <img
                                 className="selected-book-img"
-                                src={selectedBook.images[0].ruta}
+                                src={selectedBook.images[0].ruta_archivo}
                                 alt={selectedBook.title}
                             />
                         ) : (

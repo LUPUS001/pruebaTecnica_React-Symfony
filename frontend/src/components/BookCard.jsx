@@ -24,7 +24,7 @@ function BookCard(props) {
             {book.images && book.images.length > 0 ? (
                 <img
                     className="book-thumbnail"
-                    src={book.images[0].ruta}
+                    src={book.images[0].ruta_archivo}
                     alt={book.title}
                 />
             ) : (
