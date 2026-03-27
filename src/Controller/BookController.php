@@ -69,6 +69,35 @@ final class BookController extends AbstractController
         );
 
         $this->em->persist($book);
+
+        // --- ASIGNACION AUTOMÁTICA DE IMAGEN (Igual que en la importación) ---
+        $isbn = $book->getIsbn();
+        $suffixes = ['', '_2'];
+        $extensions = ['jpg', 'png', 'jpeg', 'webp'];
+        $hasLocalImages = false;
+
+        foreach ($suffixes as $suffix) {
+            foreach ($extensions as $ext) {
+                $localPath = "/images/{$isbn}{$suffix}.{$ext}";
+                $fullPath = $this->getParameter('kernel.project_dir') . '/public' . $localPath;
+
+                if (file_exists($fullPath)) {
+                    $image = new Image();
+                    $image->setRutaArchivo($localPath);
+                    $image->setBook($book);
+                    $this->em->persist($image);
+                    $hasLocalImages = true;
+                }
+            }
+        }
+
+        if (!$hasLocalImages) {
+            $image = new Image();
+            $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$isbn}-L.jpg");
+            $image->setBook($book);
+            $this->em->persist($image);
+        }
+
         $this->em->flush();
 
         return new JsonResponse(['Libro añadido con éxito' => true, 'Titulo' => $book->getTitle()], 201);
