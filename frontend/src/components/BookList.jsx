@@ -14,7 +14,7 @@ function BookList(props) {
         );
     });
 
-    return <main>{bookCard}</main>;
+    return <ul className="books-grid">{bookCard}</ul>;
 }
 
 export default BookList;

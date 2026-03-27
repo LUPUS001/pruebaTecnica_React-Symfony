@@ -42,41 +42,34 @@ function App() {
     }, []);
 
     return (
-        <div className="app-header">
-            <header>
+        <div>
+            <header className="app-header">
                 {selectedBook.isbn ? (
                     <>
-                        <div>
-                            {selectedBook.images &&
-                            selectedBook.images.length > 0 ? (
-                                <img
-                                    src={selectedBook.images[0].ruta}
-                                    alt={selectedBook.title}
-                                />
-                            ) : (
-                                <div>Sin imagen</div>
-                            )}
-                        </div>
+                        {selectedBook.images &&
+                        selectedBook.images.length > 0 ? (
+                            <img
+                                className="selected-book-img"
+                                src={selectedBook.images[0].ruta}
+                                alt={selectedBook.title}
+                            />
+                        ) : (
+                            <div className="selected-no-book-img">
+                                Sin imagen
+                            </div>
+                        )}
                         <div>
                             <h2>{selectedBook.title}</h2>
                             <p>
                                 <strong>Autor:</strong> {selectedBook.author}
                             </p>
                             <p>
-                                <strong>ISBN:</strong>
-                                {selectedBook.isbn}
-                            </p>
-                            <p>
-                                <strong>Categoria:</strong>
-                                {selectedBook.category}
-                            </p>
-                            <p>
-                                <em>{selectedBook.description}</em>
+                                <strong>ISBN:</strong> {selectedBook.isbn}
                             </p>
                         </div>
                     </>
                 ) : (
-                    <p>Quieres ver un libro o no?</p>
+                    <p>Selecciona un libro del catálogo</p>
                 )}
             </header>
 

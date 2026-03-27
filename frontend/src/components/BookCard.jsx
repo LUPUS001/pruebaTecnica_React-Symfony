@@ -20,18 +20,18 @@ function BookCard(props) {
         }
     };
     return (
-        <li onClick={() => setSelectedBook(book)}>
-            <div>
-                {book.images && book.images.length > 0 ? (
-                    <img src={book.images[0].ruta} alt={book.title} />
-                ) : (
-                    <span>Sin imagen</span>
-                )}
-            </div>
+        <li className="book-card" onClick={() => setSelectedBook(book)}>
+            {book.images && book.images.length > 0 ? (
+                <img
+                    className="book-thumbnail"
+                    src={book.images[0].ruta}
+                    alt={book.title}
+                />
+            ) : (
+                <div className="book-thumbnail">Sin imagen</div>
+            )}
             <div>
                 <h3>{book.title}</h3>
-                <h3>{book.subtitle}</h3>
-                <h3>{book.genre}</h3>
                 <p>Autor: {book.author}</p>
                 <button onClick={handleDelete}>Eliminar</button>
             </div>

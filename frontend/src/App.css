@@ -1,9 +1,59 @@
-/* App Header  */
+/* APP */
 .app-header {
+    background-color: #f9ffff;
     padding: 20px;
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    margin-bottom: 20px;
+    border-bottom: 2px solid #ddd;
     display: flex;
     gap: 20px;
+}
+
+.selected-book-img {
+    /* Para que las imágenes mantengan un tamaño predeterminado al ser seleccionadas */
+    width: 150px;
+    height: 200px;
+}
+
+.selected-no-book-img {
+    /* Un placeholder que mostraremos si el libro no tiene imagen */
+    width: 150px;
+    height: 200px;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* BOOK LIST */
+.books-grid {
+    /* Para que las tarjetas no sean una columna infinita hacia abajo */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    list-style: none;
+    padding: 0;
+}
+
+/* BOOK CARD */
+.book-card {
+    /* Para que las tarjetas se vean mas bonitas */
+    border: 1px solid #ccc;
+    padding: 10px;
+    width: 250px;
+    display: flex;
+    gap: 10px;
+}
+
+.book-thumbnail {
+    /* Para que las imagenes tengan el mismo tamaño (IMPORTANTE) */
+    width: 80px;
+    height: 110px;
+    object-fit: cover;
+    background-color: #eee;
+}
+
+/* Botones  */
+button {
+    margin-right: 5px;
+    cursor: pointer;
+    margin-top: 10px;
 }
