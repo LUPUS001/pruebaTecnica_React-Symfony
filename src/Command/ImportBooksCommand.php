@@ -64,14 +64,53 @@ class ImportBooksCommand extends Command
             $book->setCategory($individualBookData['category']);
             $this->entityManager->persist($book);
 
-            // --- ASIGNACION AUTOMÁTICA DE PORTADA (Open Library) ---
-            $image = new Image();
-            $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$individualBookData['isbn']}-L.jpg");
-            $image->setBook($book);
-            $this->entityManager->persist($image);
-       }
+             // --- ASIGNACION AUTOMÁTICA DE PORTADA ---
+             $isbn = $individualBookData['isbn'];
+             $publicImagesDir = __DIR__ . '/../../public/images';
+             $localImagesFound = false;
 
-       $this->entityManager->flush();
+             if (is_dir($publicImagesDir)) {
+                 $extensions = ['jpg', 'jpeg', 'png', 'webp'];
+                 $foundFiles = [];
+
+                 // Buscamos archivos que empiecen por el ISBN
+                 foreach ($extensions as $ext) {
+                     // Imagen principal: {isbn}.{ext}
+                     $mainImage = "$isbn.$ext";
+                     if (file_exists("$publicImagesDir/$mainImage")) {
+                         $foundFiles[] = "/images/$mainImage";
+                     }
+
+                     // Imágenes adicionales: {isbn}_{n}.{ext}
+                     for ($i = 2; $i <= 5; $i++) {
+                         $extraImage = "{$isbn}_$i.$ext";
+                         if (file_exists("$publicImagesDir/$extraImage")) {
+                             $foundFiles[] = "/images/$extraImage";
+                         }
+                     }
+                 }
+
+                 if (!empty($foundFiles)) {
+                     foreach ($foundFiles as $path) {
+                         $image = new Image();
+                         $image->setRutaArchivo($path);
+                         $image->setBook($book);
+                         $this->entityManager->persist($image);
+                     }
+                     $localImagesFound = true;
+                 }
+             }
+
+             // Si no hay imágenes locales, usamos Open Library como fallback
+             if (!$localImagesFound) {
+                 $image = new Image();
+                 $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$isbn}-L.jpg");
+                 $image->setBook($book);
+                 $this->entityManager->persist($image);
+             }
+        }
+
+        $this->entityManager->flush();
        $io->success('Importación de libros completado con éxito (incluyendo portadas).');
 
        return Command::SUCCESS;

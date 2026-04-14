@@ -46,14 +46,48 @@ class ImportController extends AbstractController
             // Campos opcionales (usamos ?? null para evitar errores si no vienen en el JSON) 
             $book->setWebsite($data['website'] ?? null);
 
-            // 4. Creamos una imagen de muestra para el libro usando Open Library (basado en ISBN)
-            // Esto asegura que la parrilla se vea visualmente atractiva como pide el test
-            $image = new Image();
-            $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$data['isbn']}-L.jpg");
-            $image->setBook($book);
+            // 4. Asignación de imágenes (prioridad local, fallback Open Library)
+            $isbn = $data['isbn'];
+            $publicImagesDir = $this->getParameter('kernel.project_dir') . '/public/images';
+            $localImagesFound = false;
+
+            if (is_dir($publicImagesDir)) {
+                $extensions = ['jpg', 'jpeg', 'png', 'webp'];
+                $foundFiles = [];
+
+                foreach ($extensions as $ext) {
+                    $mainImage = "$isbn.$ext";
+                    if (file_exists("$publicImagesDir/$mainImage")) {
+                        $foundFiles[] = "/images/$mainImage";
+                    }
+
+                    for ($i = 2; $i <= 5; $i++) {
+                        $extraImage = "{$isbn}_$i.$ext";
+                        if (file_exists("$publicImagesDir/$extraImage")) {
+                            $foundFiles[] = "/images/$extraImage";
+                        }
+                    }
+                }
+
+                if (!empty($foundFiles)) {
+                    foreach ($foundFiles as $path) {
+                        $image = new Image();
+                        $image->setRutaArchivo($path);
+                        $image->setBook($book);
+                        $entityManager->persist($image);
+                    }
+                    $localImagesFound = true;
+                }
+            }
+
+            if (!$localImagesFound) {
+                $image = new Image();
+                $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$isbn}-L.jpg");
+                $image->setBook($book);
+                $entityManager->persist($image);
+            }
 
             $entityManager->persist($book); 
-            $entityManager->persist($image);
         }
 
         $entityManager->flush();
