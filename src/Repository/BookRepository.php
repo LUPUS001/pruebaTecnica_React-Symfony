@@ -16,30 +16,30 @@ class BookRepository extends ServiceEntityRepository
         parent::__construct($registry, Book::class);
     }
 
-    public function findBefore2013()
+    public function findYear($year)
     {
         return $this->getEntityManager()->createQuery('
             SELECT book 
             FROM App\Entity\Book book
-            WHERE book.published < :fecha
+            WHERE book.published LIKE :fecha
         ')
-            ->setParameter('fecha', '2013-01-01 00:00:00')
+            ->setParameter('fecha', $year . "%")
             ->getResult();
     }
 
     public function findBookImagen($isbn)
     {
         /* 
-        ESTA ERA LA FORMA CON DQL (STRING):
-        return $this->getEntityManager()->createQuery('
-            SELECT book
-            FROM App\Entity\Book book 
-            LEFT JOIN FETCH book.images
-            WHERE book.isbn = :isbn
-        ')
-        ->setParameter('isbn', $isbn)
-        ->getOneOrNullResult(); 
-        */
+         ESTA ERA LA FORMA CON DQL (STRING):
+         return $this->getEntityManager()->createQuery('
+         SELECT book
+         FROM App\Entity\Book book 
+         LEFT JOIN FETCH book.images
+         WHERE book.isbn = :isbn
+         ')
+         ->setParameter('isbn', $isbn)
+         ->getOneOrNullResult(); 
+         */
 
         // ESTA ES LA FORMA CON QUERY BUILDER (MÁS SEGURA Y ESTÁNDAR):
         return $this->createQueryBuilder('book')
@@ -65,7 +65,7 @@ class BookRepository extends ServiceEntityRepository
 //            ->getResult()
 //        ;
 //    } 
-     
+
 //    public function findOneBySomeField($value): ?Book
 //    {
 //        return $this->createQueryBuilder('b')

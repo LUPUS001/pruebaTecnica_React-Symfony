@@ -11,6 +11,8 @@ function App() {
     // Lo separamos del estado 'books' para que, al filtrar libros, no perdamos las opciones del menú desplegable.
     const [allCategories, setAllCategories] = useState([]);
 
+    const [allYears, setAllYears] = useState([]);
+
     useEffect(() => {
         fetchAllBooks();
     }, []);
@@ -22,28 +24,40 @@ function App() {
             setBooks(data);
 
             const categories = [];
-            data.forEach(book => {
+            const years = [];
+
+            // Recorremos todos los libros para obtener todas las categorías y años
+            data.forEach((book) => {
                 // Si la categoría no está ya en nuestra lista 'categories', la añadimos
                 if (!categories.includes(book.category)) {
                     categories.push(book.category);
                 }
+
+                // split("-")[0] para obtener solo el año (2013) y no la fecha completa (2013-01-01)
+                let year = book.published.split("-")[0];
+
+                // Si el año no está ya en nuestra lista 'years', lo añadimos
+                if (!years.includes(year)) {
+                    years.push(year);
+                }
             });
             setAllCategories(categories);
+            setAllYears(years);
         } catch (error) {
             console.error(error);
         }
     };
 
-    const fetchBooksAntes2013 = async () => {
+    // Obtenemos los libros de un año concreto
+    const fetchFindYear = async (year) => {
         try {
-            const response = await fetch("/book/before2013");
+            const response = await fetch(`/book/year/${year}`);
             const data = await response.json();
             setBooks(data);
         } catch (error) {
             console.error(error);
         }
     };
-
 
     // Recibimos la categoría que nos llega desde el botón handleFilterByCategory
     const fetchCategoryBooks = async (category) => {
@@ -58,23 +72,37 @@ function App() {
 
     // Aquí será donde recibiremos la categoría que busca el usuario
     const handleFilterByCategory = () => {
-        const category = prompt('Introduce la categoría')
+        const category = prompt("Introduce la categoría");
         if (category) {
             fetchCategoryBooks(category);
         }
-    }
+    };
 
     const handleCategoryChange = (e) => {
         const category = e.target.value;
         if (category === "all") {
             fetchAllBooks();
-        } else if (category === "before2013") {
-            fetchBooksAntes2013();
         } else {
             fetchCategoryBooks(category);
         }
     };
 
+    // Aquí será donde recibiremos el año que busca el usuario
+    const handleFilterByYear = () => {
+        const yearSelected = prompt("Introduce el año");
+        if (yearSelected) {
+            fetchFindYear(yearSelected);
+        }
+    };
+
+    const handleYearChange = (e) => {
+        const yearSelected = e.target.value;
+        if (yearSelected === "all") {
+            fetchAllBooks();
+        } else {
+            fetchFindYear(yearSelected);
+        }
+    };
 
     return (
         <div>
@@ -123,27 +151,37 @@ function App() {
                 <button onClick={fetchAllBooks} className="filter-button">
                     Todos los libros
                 </button>
-                <button onClick={fetchBooksAntes2013} className="filter-button">
-                    Antes de 2013
+                <button onClick={handleFilterByYear} className="filter-button">
+                    Filtrar por año
                 </button>
-                <button onClick={handleFilterByCategory} className="filter-button">
+                <button
+                    onClick={handleFilterByCategory}
+                    className="filter-button"
+                >
                     Filtrar por categoría
                 </button>
             </section>
 
-            {/* Por si se quiere usar un select en vez de botones */}
-
+            {/* Menú de Categorías */}
             <select onChange={handleCategoryChange} className="filter-select">
-                <option value="all">Todos los libros</option>
-                <option value="before2013">Antes de 2013</option>
+                <option value="all">Todas las categorías</option>
 
-                {/* Mapeamos 'allCategories' en lugar de 'books' para que todas las categorías 
-                    sigan apareciendo en el menú aunque hayamos filtrado el catálogo */}
-                {allCategories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
+                {allCategories.map((cat) => (
+                    <option key={cat} value={cat}>
+                        {cat}
+                    </option>
                 ))}
             </select>
 
+            {/* Menú de Años */}
+            <select onChange={handleYearChange} className="year-select">
+                <option value="all">Todos los años</option>
+                {allYears.map((yearSelected) => (
+                    <option key={yearSelected} value={yearSelected}>
+                        {yearSelected}
+                    </option>
+                ))}
+            </select>
 
             <BookAdd setBooks={setBooks}></BookAdd>
             <hr />

@@ -31,15 +31,14 @@ final class BookController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/book/before2013', name: 'book2013')]
-    public function books2013(): Response
+    #[Route('/book/year/{year}', name: 'books_by_year')]
+    public function books_by_year($year): Response
     {    
-        $books = $this->em->getRepository(Book::class)->findBefore2013();
+        $books = $this->em->getRepository(Book::class)->findYear($year);
         $data = [];
         foreach ($books as $book) {
             $data[] = $book->toArray();
         }
-        // array_map(fn(Book $book) => $book->toArray(), $books);
 
         return new JsonResponse($data);
     }
