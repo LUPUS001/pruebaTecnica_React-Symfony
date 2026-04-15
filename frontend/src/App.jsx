@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import BookList from "./components/BookList";
 import BookAdd from "./components/BookAdd";
+import BookHeader from "./components/BookHeader";
 import "./App.css";
 
 function App() {
@@ -41,8 +42,9 @@ function App() {
                     years.push(year);
                 }
             });
-            setAllCategories(categories);
-            setAllYears(years);
+            setAllCategories(categories.sort()); // sort() ordena alfabéticamente 
+            setAllYears(years.sort((a, b) => b - a)); // sort((a, b) => b - a) ordena numéricamente de mayor a menor
+
         } catch (error) {
             console.error(error);
         }
@@ -106,45 +108,7 @@ function App() {
 
     return (
         <div>
-            <header className="app-header">
-                {selectedBook.isbn ? (
-                    <>
-                        <div className="selected-book-image-container">
-                            {selectedBook.images &&
-                                selectedBook.images.length > 0 ? (
-                                <img
-                                    className="selected-book-image"
-                                    src={selectedBook.images[0].ruta}
-                                    alt={selectedBook.title}
-                                />
-                            ) : (
-                                <div className="no-image-placeholder">
-                                    Sin imagen
-                                </div>
-                            )}
-                        </div>
-                        <div>
-                            <h2>{selectedBook.title}</h2>
-                            <p>
-                                <strong>Autor:</strong> {selectedBook.author}
-                            </p>
-                            <p>
-                                <strong>ISBN:</strong>
-                                {selectedBook.isbn}
-                            </p>
-                            <p>
-                                <strong>Categoria:</strong>
-                                {selectedBook.category}
-                            </p>
-                            <p>
-                                <em>{selectedBook.description}</em>
-                            </p>
-                        </div>
-                    </>
-                ) : (
-                    <p>Selecciona un libro</p>
-                )}
-            </header>
+            <BookHeader selectedBook={selectedBook} />
 
             <section>
                 <h4>Filtrar catálogo:</h4>
