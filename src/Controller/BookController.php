@@ -7,7 +7,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Book;
-use App\Form\BookType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -24,35 +23,50 @@ final class BookController extends AbstractController
     public function index(): Response
     {
         $books = $this->em->getRepository(Book::class)->findAll();
-        $data = array_map(fn(Book $book) => $book->toArray(), $books);
+        $data = [];
+        foreach ($books as $book) {
+            $data[] = $book->toArray();
+        }
 
         return new JsonResponse($data);
     }
 
-    #[Route('/book/antes2013', name: 'libros2013')]
-    public function libros2013(): Response
+    #[Route('/book/before2013', name: 'book2013')]
+    public function books2013(): Response
     {    
         $books = $this->em->getRepository(Book::class)->findBefore2013();
-        $data = array_map(fn(Book $book) => $book->toArray(), $books);
+        $data = [];
+        foreach ($books as $book) {
+            $data[] = $book->toArray();
+        }
+        // array_map(fn(Book $book) => $book->toArray(), $books);
 
         return new JsonResponse($data);
     }
 
-    #[Route('/book/drama', name: 'drama_book')]
-    public function drama_book(): Response
+    // Creamos una ruta dinámica donde recibimos la categoría que nos llega desde el botón handleFilterByCategory
+    #[Route('/book/category/{category}', name: 'category_book')]
+    public function category_book($category): Response
     {
-        $books = $this->em->getRepository(Book::class)->findBy(['category' => 'Drama']);
-        $data = array_map(fn(Book $book) => $book->toArray(), $books);
+        // Normalizamos la categoría (Ej: "ficción" -> "Ficción") para asegurar que coincida con la DB
+        $books = $this->em->getRepository(Book::class)->findBy(['category' => ucfirst(strtolower($category))]);            
+        $data = [];
+
+        foreach ($books as $book) {
+            $data[] = $book->toArray();
+        }
 
         return new JsonResponse($data);
     }
+    // Ahora en lugar de necesitar un webservice para cada categoría, hacemos todo este trabajo en un solo webservice 'category_book' 
+    
 
 
 
     // Webservices REST que permiten Create y Delete
     
-    #[Route('/book/anadir', name: 'anadir_libro', methods: ['POST'])]
-    public function anadir_libro(Request $request): Response {
+    #[Route('/book/add', name: 'add_book', methods: ['POST'])]
+    public function add_book(Request $request): Response {
         $data = $request->toArray();
 
         $book = new Book(
@@ -62,10 +76,10 @@ final class BookController extends AbstractController
             $data['author'] ?? null,
             isset($data['published']) ? new \DateTimeImmutable($data['published']) : new \DateTimeImmutable(),
             $data['publisher'] ?? null,
-            $data['pages'] ?? 0,
+            $data['pages'] ?? 1,
             $data['description'] ?? null,
             $data['website'] ?? null,
-            $data['category'] ?? null
+            ucfirst(strtolower($data['category'])) ?? null // Para que siempre se guarde la categoría con la primera letra en mayúscula (strlower lo pone en minúsculas y ucfirst pone la primera letra en mayúscula)
         );
 
         $this->em->persist($book);
@@ -74,35 +88,10 @@ final class BookController extends AbstractController
         return new JsonResponse(['Libro añadido con éxito' => true, 'Titulo' => $book->getTitle()], 201);
     }
 
-    /*#[Route('/book/anadir', name: 'anadir_libro')]
-    public function anadir_libro(): Response {
-        $book = new Book('9781506711980','Berserk Deluxe Edition Volume 1','The Black Swordsman & The Brand of Sacrifice','Kentaro Miura',new \DateTimeImmutable('2019-03-26T00:00:00.000Z'),'Dark Horse Manga', 692, 'The reigning king of adult fantasy manga now in deluxe 7x10 hardcover editions! Born in tragedy, raised in abuse and neglect, Guts is a hardened warrior who seeks revenge against his former mentor.', 'https://www.darkhorse.com/Books/3003-631/Berserk-Deluxe-Edition-Volume-1-HC', 'Dark Fantasy');
-        $this->em->persist($book);
-        $this->em->flush();
-
-        return new JsonResponse(['Libro añadido con éxito' => true, 'Titulo' => $book->getTitle()]);
-    }*/
-
-    #[Route('/book/anadirF', name: 'anadir_libro_formulario')]
-    public function anadir_libro_formulario(Request $request): Response {
-        $book = new Book();
-        $formularioLibro = $this->createForm(BookType::class, $book);
-        $formularioLibro->handleRequest($request);
-        
-        if ($formularioLibro->isSubmitted() && $formularioLibro->isValid()) { 
-            $this->em->persist($book);
-            $this->em->flush();
-            
-            return $this->redirectToRoute('app_book');
-        }
-
-        return $this->render('book/index.html.twig', [ 
-            'formularioLibro' => $formularioLibro->createView(),
-        ]);
-    }
     
-    #[Route('/book/delete/{isbn}', name: 'borrar_libro', methods: ['DELETE'])]
-    public function borrar_libro($isbn): Response {
+    // Renombramos a nombres en inglés para consistencia con el resto de la API
+    #[Route('/book/delete/{isbn}', name: 'delete_book', methods: ['DELETE'])]
+    public function delete_book($isbn): Response {
         $bookDelete = $this->em->getRepository(Book::class)->findOneBy(['isbn' => $isbn]);
 
         if (!$bookDelete) {
@@ -124,9 +113,9 @@ final class BookController extends AbstractController
 
 
     // La información de un libro concreto, pasando como parámetro un ISBN y que devolverá las imágenes
-
-    #[Route('/book/{isbn}', name: 'buscar_libro')]
-    public function buscar_libro($isbn): Response {
+    // Obtenemos la información de un libro y sus imágenes asociadas
+    #[Route('/book/{isbn}', name: 'find_book')]
+    public function find_book($isbn): Response {
         $book = $this->em->getRepository(Book::class)->findBookImagen($isbn);
         
         if (!$book) {

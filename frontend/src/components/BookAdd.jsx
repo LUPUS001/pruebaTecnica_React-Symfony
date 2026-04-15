@@ -16,11 +16,11 @@ function BookAdd(props) {
             author,
             isbn,
             category: genre,
-            pages: parseInt(pages) || 0,
+            pages: parseInt(pages) || 1,
         };
 
         try {
-            const response = await fetch("/book/anadir", {
+            const response = await fetch("/book/add", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -35,7 +35,9 @@ function BookAdd(props) {
                 setIsbn("");
                 setGenre("");
                 setPages("");
+                // Para que el usuario sepa que la operación tuvo éxito
                 console.log("Libro añadido con éxito");
+                alert("¡Libro añadido con éxito!");
             }
         } catch (error) {
             console.error(error);
