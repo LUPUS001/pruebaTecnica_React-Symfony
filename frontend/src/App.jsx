@@ -6,7 +6,7 @@ import "./App.css";
 
 function App() {
     const [books, setBooks] = useState([]);
-    const [selectedBook, setSelectedBook] = useState([]);
+    const [selectedBook, setSelectedBook] = useState(null); // lo ponemos como null porque es un objeto y no un array, y al ser null no muestra nada al principio y no da error al cargar la página 
 
     // allCategories guarda la lista completa de categorías disponibles.
     // Lo separamos del estado 'books' para que, al filtrar libros, no perdamos las opciones del menú desplegable.
@@ -23,32 +23,38 @@ function App() {
             const response = await fetch("/books");
             const data = await response.json();
             setBooks(data);
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
-            const categories = [];
-            const years = [];
+    // Usamos useEffect porque si no lo hacemos, no se actualizará la lista de categorías
+    // y años cuando agreguemos un nuevo libro hasta que recarguemos la página.
+    useEffect(() => {
+        const categories = [];
+        const years = [];
 
-            // Recorremos todos los libros para obtener todas las categorías y años
-            data.forEach((book) => {
-                // Si la categoría no está ya en nuestra lista 'categories', la añadimos
-                if (!categories.includes(book.category)) {
-                    categories.push(book.category);
-                }
+        // Recorremos todos los libros para obtener las categorías y años
+        books.forEach((book) => {
+            // Si el libro tiene una categoría y no está ya en nuestra lista 'categories', lo añadimos
+            if (book.category && !categories.includes(book.category)) {
+                categories.push(book.category);
+            }
+            // En el filtro if también ponemos book.category, porque sino podríamos añadir categorías vacías,
 
-                // split("-")[0] para obtener solo el año (2013) y no la fecha completa (2013-01-01)
+            if (book.published) {
                 let year = book.published.split("-")[0];
+                // split("-")[0] para obtener solo el año (2013) y no la fecha completa (2013-01-01)
 
                 // Si el año no está ya en nuestra lista 'years', lo añadimos
                 if (!years.includes(year)) {
                     years.push(year);
                 }
-            });
-            setAllCategories(categories.sort()); // sort() ordena alfabéticamente 
-            setAllYears(years.sort((a, b) => b - a)); // sort((a, b) => b - a) ordena numéricamente de mayor a menor
-
-        } catch (error) {
-            console.error(error);
-        }
-    };
+            }
+        });
+        setAllCategories(categories.sort()); // sort() ordena alfabéticamente
+        setAllYears(years.sort((a, b) => b - a)); // sort((a, b) => b - a) ordena numéricamente de mayor a menor
+    }, [books]);
 
     // Obtenemos los libros de un año concreto
     const fetchFindYear = async (year) => {
@@ -107,7 +113,7 @@ function App() {
     };
 
     return (
-        <div>
+        <div className="app-container">
             <BookHeader selectedBook={selectedBook} />
 
             <section>

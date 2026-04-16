@@ -29,14 +29,15 @@ function BookAdd(props) {
             });
 
             if (response.ok) {
-                setBooks((prevBooks) => [...prevBooks, newBook]);
+                const savedBook = await response.json();
+                setBooks((prevBooks) => [...prevBooks, savedBook]);
                 setTitle("");
                 setAuthor("");
                 setIsbn("");
                 setGenre("");
                 setPages("");
                 // Para que el usuario sepa que la operación tuvo éxito
-                console.log("Libro añadido con éxito");
+                console.log("Libro añadido con éxito:", savedBook.title);
                 alert("¡Libro añadido con éxito!");
             }
         } catch (error) {

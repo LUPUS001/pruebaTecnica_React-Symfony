@@ -84,7 +84,7 @@ final class BookController extends AbstractController
         $this->em->persist($book);
         $this->em->flush();
 
-        return new JsonResponse(['Libro añadido con éxito' => true, 'Titulo' => $book->getTitle()], 201);
+        return new JsonResponse($book->toArray(), 201);
     }
 
     

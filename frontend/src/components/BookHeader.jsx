@@ -3,7 +3,11 @@
 function BookHeader({ selectedBook }) {
     return (
         <header className="app-header">
-            {selectedBook.isbn ? (
+            {/* Si selectedBook existe y tiene un ISBN, mostramos la información del libro 
+                Esto es necesario ponerlo por haber cambiado el estado inicial de selectedBook a null en App.jsx
+                Si no lo ponemos, nos daría error al intentar acceder a selectedBook.isbn y la página se mostraría vacía
+            */}
+            {selectedBook && selectedBook.isbn ? (
                 <>
                     <div className="selected-book-image-container">
                         {selectedBook.images && selectedBook.images.length > 0 ? (
@@ -16,7 +20,7 @@ function BookHeader({ selectedBook }) {
                             <div className="no-image-placeholder">Sin imagen</div>
                         )}
                     </div>
-                    <div>
+                    <div className="selected-book-info">
                         <h2>{selectedBook.title}</h2>
                         <p>
                             <strong>Autor:</strong> {selectedBook.author}
@@ -25,15 +29,17 @@ function BookHeader({ selectedBook }) {
                             <strong>ISBN:</strong> {selectedBook.isbn}
                         </p>
                         <p>
-                            <strong>Categoria:</strong> {selectedBook.category}
+                            <strong>Categoría:</strong> {selectedBook.category}
                         </p>
                         <p>
-                            <em>{selectedBook.description}</em>
+                            <em>{selectedBook.description || "Sin descripción disponible."}</em>
                         </p>
                     </div>
                 </>
             ) : (
-                <p>Selecciona un libro</p>
+                <div className="selected-book-info">
+                    <p>Selecciona un libro del catálogo para ver sus detalles aquí.</p>
+                </div>
             )}
         </header>
     );

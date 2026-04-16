@@ -1,148 +1,119 @@
-/* App CSS */
-.app-header {
-    padding: 20px;
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    display: flex;
-    gap: 20px;
-}
-
-.no-image-placeholder {
-    width: 150px;
-    height: 180px;
-    background-color: #ccc;
+.app-container {
+    max-width: 1200px;
     margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.filter-button {
-    margin-right: 10px;
-}
-
-/* BookAdd CSS */
-.book-add-container {
     padding: 20px;
-    border: 1px solid #ccc;
+}
+
+/* Header & Detalles del libro seleccionado */
+.app-header {
+    background-color: #f0f0f0;
+    padding: 20px;
     margin-bottom: 20px;
-    border-radius: 8px;
+    display: flex;
+    align-items: flex-start;
+    min-height: 180px;
+}
+
+.selected-book-image-container {
+    width: 120px;
+    margin-right: 20px;
+}
+
+.selected-book-image {
+    width: 100%;
+}
+
+.selected-book-info {
+    flex: 1;
+}
+
+.selected-book-info h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.4em;
+}
+
+.selected-book-info p {
+    margin: 5px 0;
+    font-size: 0.95em;
+}
+
+
+/* Sección de Filtros */
+section {
+    margin-bottom: 20px;
+}
+
+.filter-button,
+.filter-select,
+.year-select {
+    padding: 6px 14px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+/* Formulario de Añadir Libro */
+.book-add-container {
+    border: 1px solid #ddd;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.book-add-container h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.1em;
 }
 
 .book-add-form {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+}
+
+.book-add-form input {
+    margin-right: 10px;
+    margin-bottom: 10px;
+    padding: 8px;
+    font-size: 0.9em;
+    flex: 1;
+    min-width: 150px;
 }
 
 .book-add-button {
-    background-color: black;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 4px;
+    padding: 8px 16px;
+    background-color: #000;
+    color: #fff;
+    font-weight: 600;
     cursor: pointer;
+    border-radius: 15px;
 }
 
-/* BookList CSS */
+/* Cuadrícula de libros (Grid) */
 .books-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 25px;
-    padding: 20px;
-    max-width: 1400px;
-    margin: 0 auto;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    grid-column-gap: 20px;
+    grid-row-gap: 20px;
+    padding: 0;
     list-style: none;
 }
-/* .book-card-delete-button {
-  margin-top: 10px;
-  background-color: #ff4d4d;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-} */
 
-.books-grid li {
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-}
-
-.books-grid li:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15) !important;
-}
-
-/* App Header & Details */
-.app-header {
-    padding: 20px;
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    display: flex;
-    gap: 20px;
-}
-
-.selected-book-image-container {
-    flex: 1;
-    text-align: center;
-}
-
-.selected-book-image {
-    width: 150px;
-    border-radius: 4px;
-}
-
-.selected-book-info {
-    flex: 2;
-}
-
-/* Filter Section */
-.filter-section {
-    margin-bottom: 20px;
-}
-
-.filter-title {
-    margin: 0 0 10px 0;
-}
-
-/* BookCard Component Styles */
 .book-card-item {
-    cursor: pointer;
     border: 1px solid #ddd;
     padding: 15px;
-    margin: 10px;
-    list-style: none;
     display: flex;
-    gap: 15px;
     align-items: center;
-    border-radius: 8px;
-    background-color: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
 }
 
 .book-card-image-container {
-    width: 80px;
-    height: 110px;
-    background-color: #eee;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    overflow: hidden;
+    width: 70px;
+    margin-right: 15px;
 }
 
 .book-card-image {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.book-card-placeholder-text {
-    font-size: 10px;
-    color: #999;
 }
 
 .book-card-info {
@@ -155,21 +126,16 @@
 }
 
 .book-card-subtitle {
-    margin: 0 0 5px 0;
-    color: #666;
-}
-
-.book-card-author {
-    margin: 0;
     font-size: 0.9em;
+    color: #666;
+    margin-bottom: 5px;
 }
 
 .book-card-delete-button {
-    margin-top: 10px;
     background-color: #ff4d4d;
-    color: white;
+    color: #fff;
     border: none;
     padding: 5px 10px;
-    border-radius: 4px;
+    font-size: 0.8em;
     cursor: pointer;
 }
