@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Book;
+use App\Entity\Image;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -66,22 +67,47 @@ final class BookController extends AbstractController
     
     #[Route('/book/add', name: 'add_book', methods: ['POST'])]
     public function add_book(Request $request): Response {
-        $data = $request->toArray();
+        // Obtenemos los campos directamente del request (FormData los envía en la raíz de 'request')
+        $isbn = $request->request->get('isbn');
+        $title = $request->request->get('title');
+        $author = $request->request->get('author');
+        $category = $request->request->get('category');
+        $pages = $request->request->get('pages');
 
         $book = new Book(
-            $data['isbn'] ?? null,
-            $data['title'] ?? null,
-            $data['subtitle'] ?? null,
-            $data['author'] ?? null,
-            isset($data['published']) ? new \DateTimeImmutable($data['published']) : new \DateTimeImmutable(),
-            $data['publisher'] ?? null,
-            $data['pages'] ?? 1,
-            $data['description'] ?? null,
-            $data['website'] ?? null,
-            ucfirst(strtolower($data['category'])) ?? null // Para que siempre se guarde la categoría con la primera letra en mayúscula (strlower lo pone en minúsculas y ucfirst pone la primera letra en mayúscula)
+            $isbn,
+            $title,
+            null, // subtitle
+            $author,
+            new \DateTimeImmutable(), // published (como valor por defecto si no viene)
+            null, // publisher
+            (int)$pages ?: 1,
+            null, // description
+            null, // website
+            ucfirst(strtolower($category)) ?? null
         );
 
         $this->em->persist($book);
+
+        // Procesar la imagen si viene en el request
+        $uploadedFile = $request->files->get('image');
+        if ($uploadedFile) {
+            $destination = $this->getParameter('kernel.project_dir') . '/public/images';
+            // Usamos el ISBN como nombre si existe, sino un ID único
+            $newFilename = ($isbn ?: uniqid()) . '.' . $uploadedFile->guessExtension();
+            
+            try {
+                $uploadedFile->move($destination, $newFilename);
+                
+                $image = new Image();
+                $image->setRutaArchivo('/images/' . $newFilename);
+                $image->setBook($book);
+                $this->em->persist($image);
+            } catch (\Exception $e) {
+                // Si falla la subida, el libro se crea igual pero sin imagen
+            }
+        }
+
         $this->em->flush();
 
         return new JsonResponse($book->toArray(), 201);

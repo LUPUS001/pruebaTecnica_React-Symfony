@@ -80,6 +80,32 @@ section {
     min-width: 150px;
 }
 
+/* Contenedor de entrada de archivo para subir imagen de portada */
+.file-input-container {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    flex: 1;
+    min-width: 200px;
+}
+
+/* Etiqueta del contenedor de entrada de archivo */
+/* Que el texto "Subir imagen de portada:" se vea bien */
+.file-input-container label {
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: #555;
+}
+
+/* Input del contenedor de entrada de archivo */
+/* Que el input de archivo no se pegue ni al botón ni a los otros campos */
+.file-input-container input {
+    font-size: 0.8em;
+    padding: 4px 0;
+}
+
 .book-add-button {
     padding: 8px 16px;
     background-color: #000;

@@ -5,8 +5,10 @@ namespace App\Form;
 use App\Entity\Book;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints as Assert;
 
 class BookType extends AbstractType
 {
@@ -25,6 +27,18 @@ class BookType extends AbstractType
             ->add('description')
             ->add('website')
             ->add('category')
+            ->add('Subir imagen', FileType::class, [
+                'label' => 'Imagen (jpg, webp...)',
+                'mapped' => false, 
+                'required' => false,
+                'constraints' => [
+                    new Assert\File (
+                        maxSize: '30000k',
+                        extensions: ['webp', 'jpg', 'jpeg', 'png'],
+                        extensionsMessage: 'Por favor sube un formato de archivo valido (png, webp, jpg, jpeg)',
+                    )
+                ],
+            ])
             ->add('Subir', SubmitType::class)
         ;
     }

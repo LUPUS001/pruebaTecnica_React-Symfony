@@ -7,25 +7,25 @@ function BookAdd(props) {
     const [isbn, setIsbn] = useState("");
     const [genre, setGenre] = useState("");
     const [pages, setPages] = useState("");
+    const [image, setImage] = useState(null);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const newBook = {
-            title,
-            author,
-            isbn,
-            category: genre,
-            pages: parseInt(pages) || 1,
-        };
+        const formData = new FormData();
+        formData.append("title", title);
+        formData.append("author", author);
+        formData.append("isbn", isbn);
+        formData.append("category", genre);
+        formData.append("pages", pages);
+        if (image) {
+            formData.append("image", image);
+        }
 
         try {
             const response = await fetch("/book/add", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(newBook),
+                body: formData,
             });
 
             if (response.ok) {
@@ -36,6 +36,9 @@ function BookAdd(props) {
                 setIsbn("");
                 setGenre("");
                 setPages("");
+                setImage(null);
+                // Reseteamos el input de archivo manualmente si es necesario (o confiamos en el estado)
+                e.target.reset();
                 // Para que el usuario sepa que la operación tuvo éxito
                 console.log("Libro añadido con éxito:", savedBook.title);
                 alert("¡Libro añadido con éxito!");
@@ -89,6 +92,18 @@ function BookAdd(props) {
                     onChange={(e) => setPages(e.target.value)}
                     required
                 />
+                <div className="file-input-container">
+                    <label htmlFor="image-upload">
+                        Subir imagen de portada:
+                    </label>
+                    <input
+                        id="image-upload"
+                        name="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setImage(e.target.files[0])}
+                    />
+                </div>
                 <button type="submit" className="book-add-button">
                     Agregar libro
                 </button>
