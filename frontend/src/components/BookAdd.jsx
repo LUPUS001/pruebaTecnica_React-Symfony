@@ -7,6 +7,7 @@ function BookAdd(props) {
     const [isbn, setIsbn] = useState("");
     const [genre, setGenre] = useState("");
     const [pages, setPages] = useState("");
+    const [published, setPublished] = useState(new Date().toISOString().split('T')[0]);
 
     // En un principio el formulario enviaba archivos de texto plano (JSON) pero como 
     // las imagenes son archivos binarios, necesitamos usar FormData para enviar archivos binarios
@@ -26,6 +27,7 @@ function BookAdd(props) {
         formData.append("isbn", isbn);
         formData.append("category", genre);
         formData.append("pages", pages);
+        formData.append("published", published);
         if (image) {
             formData.append("image", image);
         }
@@ -47,6 +49,7 @@ function BookAdd(props) {
                 setIsbn("");
                 setGenre("");
                 setPages("");
+                setPublished(new Date().toISOString().split('T')[0]);
                 setImage(null);
                 setErrors([]); // Limpiamos errores previos
                 e.target.reset();
@@ -66,6 +69,7 @@ function BookAdd(props) {
         <div className="book-add-container">
             <h3>Agregar nuevo libro</h3>
 
+            {/* Si hay errores, los mostramos en una lista */}
             {errors.length > 0 && (
                 <div className="error-messages">
                     <ul>
@@ -118,6 +122,18 @@ function BookAdd(props) {
                     required
                 />
                 <div className="file-input-container">
+                    <label htmlFor="publish-date">Fecha de publicación:</label>
+                    <input
+                        id="publish-date"
+                        name="published"
+                        type="date"
+                        className="date-input"
+                        value={published}
+                        onChange={(e) => setPublished(e.target.value)}
+                        required
+                    />
+                </div>
+                <div className="file-input-container">
                     <label htmlFor="image-upload">
                         Subir imagen de portada:
                     </label>
@@ -125,7 +141,7 @@ function BookAdd(props) {
                         id="image-upload"
                         name="image"
                         type="file"
-                        accept="image/*"
+                        accept="image/*" // Solo permite archivos que sean imágenes
                         onChange={(e) => setImage(e.target.files[0])}
                     />
                 </div>
