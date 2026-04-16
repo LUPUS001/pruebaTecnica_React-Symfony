@@ -125,7 +125,7 @@ class Book
         return $this->published;
     }
 
-    public function setPublished(\DateTimeImmutable $published): static
+    public function setPublished(?\DateTimeImmutable $published): static
     {
         $this->published = $published;
 

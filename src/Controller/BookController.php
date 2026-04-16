@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Book;
 use App\Entity\Image;
+use App\Form\BookType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -67,50 +68,54 @@ final class BookController extends AbstractController
     
     #[Route('/book/add', name: 'add_book', methods: ['POST'])]
     public function add_book(Request $request): Response {
-        // Obtenemos los campos directamente del request (FormData los envía en la raíz de 'request')
-        $isbn = $request->request->get('isbn');
-        $title = $request->request->get('title');
-        $author = $request->request->get('author');
-        $category = $request->request->get('category');
-        $pages = $request->request->get('pages');
+        $book = new Book();
+        $form = $this->createForm(BookType::class, $book);
+        
+        // Unimos los campos de texto y los archivos para que el formulario los procese de una vez
+        $form->submit(array_merge($request->request->all(), $request->files->all()));
 
-        $book = new Book(
-            $isbn,
-            $title,
-            null, // subtitle
-            $author,
-            new \DateTimeImmutable(), // published (como valor por defecto si no viene)
-            null, // publisher
-            (int)$pages ?: 1,
-            null, // description
-            null, // website
-            ucfirst(strtolower($category)) ?? null
-        );
-
-        $this->em->persist($book);
-
-        // Procesar la imagen si viene en el request
-        $uploadedFile = $request->files->get('image');
-        if ($uploadedFile) {
-            $destination = $this->getParameter('kernel.project_dir') . '/public/images';
-            // Usamos el ISBN como nombre si existe, sino un ID único
-            $newFilename = ($isbn ?: uniqid()) . '.' . $uploadedFile->guessExtension();
-            
-            try {
-                $uploadedFile->move($destination, $newFilename);
-                
-                $image = new Image();
-                $image->setRutaArchivo('/images/' . $newFilename);
-                $image->setBook($book);
-                $this->em->persist($image);
-            } catch (\Exception $e) {
-                // Si falla la subida, el libro se crea igual pero sin imagen
+        if ($form->isValid()) {
+            // Normalización de la categoría antes de guardar
+            if ($book->getCategory()) {
+                $book->setCategory(ucfirst(strtolower($book->getCategory())));
             }
+
+            if (!$book->getPublished()) {
+                $book->setPublished(new \DateTimeImmutable());
+            }
+
+            $this->em->persist($book);
+
+            // Manejo de la imagen desde el formulario (ya validada por BookType)
+            $uploadedFile = $form->get('image')->getData();
+            if ($uploadedFile) {
+                $destination = $this->getParameter('kernel.project_dir') . '/public/images';
+                $isbn = $book->getIsbn();
+                $newFilename = ($isbn ?: uniqid()) . '.' . $uploadedFile->guessExtension();
+                
+                try {
+                    $uploadedFile->move($destination, $newFilename);
+                    
+                    $image = new Image();
+                    $image->setRutaArchivo('/images/' . $newFilename);
+                    $image->setBook($book);
+                    $this->em->persist($image);
+                } catch (\Exception $e) {
+                    // Si falla el movimiento físico, el libro se crea pero sin imagen
+                }
+            }
+
+            $this->em->flush();
+            return new JsonResponse($book->toArray(), 201);
         }
 
-        $this->em->flush();
+        // Si el formulario NO es válido, devolvemos los errores
+        $errors = [];
+        foreach ($form->getErrors(true) as $error) {
+            $errors[] = $error->getMessage();
+        }
 
-        return new JsonResponse($book->toArray(), 201);
+        return new JsonResponse(['errors' => $errors], 400);
     }
 
     

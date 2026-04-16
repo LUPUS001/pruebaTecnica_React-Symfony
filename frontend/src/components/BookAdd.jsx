@@ -7,11 +7,19 @@ function BookAdd(props) {
     const [isbn, setIsbn] = useState("");
     const [genre, setGenre] = useState("");
     const [pages, setPages] = useState("");
+
+    // En un principio el formulario enviaba archivos de texto plano (JSON) pero como 
+    // las imagenes son archivos binarios, necesitamos usar FormData para enviar archivos binarios
     const [image, setImage] = useState(null);
+
+    // Este es el estado que nos permitirá recibir los errores que hemos configurado en BookType
+    // y mostrarlos en el frontend (con esto detectará por ejemplo si la imagen es demasiado grande)
+    const [errors, setErrors] = useState([]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Creamos un objeto FormData para enviar tanto archivos binarios como de texto plano (JSON)
         const formData = new FormData();
         formData.append("title", title);
         formData.append("author", author);
@@ -22,6 +30,9 @@ function BookAdd(props) {
             formData.append("image", image);
         }
 
+        // Hacemos la petición POST al webservice add_book
+        // No es necesario especificar el header 'Content-Type' con 'multipart/form-data'
+        // porque el navegador lo hace automáticamente al enviar un FormData
         try {
             const response = await fetch("/book/add", {
                 method: "POST",
@@ -37,11 +48,14 @@ function BookAdd(props) {
                 setGenre("");
                 setPages("");
                 setImage(null);
-                // Reseteamos el input de archivo manualmente si es necesario (o confiamos en el estado)
+                setErrors([]); // Limpiamos errores previos
                 e.target.reset();
-                // Para que el usuario sepa que la operación tuvo éxito
-                console.log("Libro añadido con éxito:", savedBook.title);
                 alert("¡Libro añadido con éxito!");
+            } else if (response.status === 400) {
+                const errorData = await response.json();
+                setErrors(errorData.errors || ["Error en la validación"]);
+            } else {
+                setErrors(["Ocurrió un error inesperado en el servidor."]);
             }
         } catch (error) {
             console.error(error);
@@ -51,6 +65,17 @@ function BookAdd(props) {
     return (
         <div className="book-add-container">
             <h3>Agregar nuevo libro</h3>
+
+            {errors.length > 0 && (
+                <div className="error-messages">
+                    <ul>
+                        {errors.map((error, index) => (
+                            <li key={index} style={{ color: "red", fontSize: "0.85em" }}>{error}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit} className="book-add-form">
                 <input
                     name="title"

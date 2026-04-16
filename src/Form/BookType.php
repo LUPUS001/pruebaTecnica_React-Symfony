@@ -27,13 +27,14 @@ class BookType extends AbstractType
             ->add('description')
             ->add('website')
             ->add('category')
-            ->add('Subir imagen', FileType::class, [
+            // cambio de nombre a 'image' para que coincida con el nombre del campo en el frontend
+            ->add('image', FileType::class, [
                 'label' => 'Imagen (jpg, webp...)',
                 'mapped' => false, 
                 'required' => false,
                 'constraints' => [
                     new Assert\File (
-                        maxSize: '30000k',
+                        maxSize: '30000k', // 30MB
                         extensions: ['webp', 'jpg', 'jpeg', 'png'],
                         extensionsMessage: 'Por favor sube un formato de archivo valido (png, webp, jpg, jpeg)',
                     )
@@ -47,6 +48,7 @@ class BookType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Book::class,
+            'csrf_protection' => false, // Desactivamos la protección CSRF porque no la estamos usando en el frontend (es una API REST) 
         ]);
     }
 }
