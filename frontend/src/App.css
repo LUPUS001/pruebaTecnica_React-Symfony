@@ -21,6 +21,24 @@
 
 .selected-book-image {
     width: 100%;
+    height: 160px;
+    object-fit: cover;
+    /* Asegura que la imagen rellene el espacio sin deformarse */
+}
+
+/* Placeholder para cuando no hay imagen del libro en el header */
+.no-image-placeholder {
+    width: 120px;
+    height: 160px;
+    background-color: #e8e8e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed #bbb;
+    border-radius: 8px;
+    color: #777;
+    font-size: 0.9em;
+    font-weight: 600;
 }
 
 .selected-book-info {
@@ -43,6 +61,7 @@ section {
     margin-bottom: 20px;
 }
 
+/* Botones de filtro y selectores de año */
 .filter-button,
 .filter-select,
 .year-select {
@@ -79,6 +98,28 @@ section {
     flex: 1;
     min-width: 150px;
 }
+
+/* Estilos para los mensajes de error */
+.error-messages {
+    background-color: #ffeaea;
+    border: 1px solid #ff4d4d;
+    padding: 10px;
+    border-radius: 5px;
+    list-style-position: inside;
+    margin-bottom: 15px;
+}
+
+/* Estilos para el mensaje de éxito */
+.success-message {
+    background-color: #eaffea;
+    border: 1px solid #4dff4d;
+    color: #1a5a1a;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
 
 /* Contenedor de entrada de archivo para subir imagen de portada */
 .file-input-container {
@@ -138,8 +179,29 @@ section {
     margin-right: 15px;
 }
 
+/* Placeholder para cuando no hay imagen del libro en la lista */
+/* y que no sea simple texto, sino que tenga un borde y sea del mismo tamaño que la imagen */
+.book-card-placeholder {
+    width: 70px;
+    height: 100px;
+    background-color: #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed #ccc;
+    border-radius: 4px;
+    color: #999;
+    font-size: 0.7em;
+    text-align: center;
+}
+
+/* Imagen del libro en la lista */
 .book-card-image {
     width: 100%;
+    height: 100px;
+
+    /* Asegura que la imagen rellene el espacio sin deformarse */
+    object-fit: cover;
 }
 
 .book-card-info {
@@ -157,6 +219,7 @@ section {
     margin-bottom: 5px;
 }
 
+/* Botón de eliminar */
 .book-card-delete-button {
     background-color: #ff4d4d;
     color: #fff;

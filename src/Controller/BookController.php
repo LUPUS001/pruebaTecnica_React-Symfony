@@ -24,25 +24,27 @@ final class BookController extends AbstractController
     #[Route('/books', name: 'app_book')]
     public function index(): Response
     {
-        $books = $this->em->getRepository(Book::class)->findAll();
-        $data = [];
-        foreach ($books as $book) {
-            $data[] = $book->toArray();
+        $books = $this->em->getRepository(Book::class)->findAll(); // Obtenemos todos los libros
+        $data = []; // Array donde guardaremos los libros
+
+        foreach ($books as $book) { // Recorremos todos los libros
+            $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
         }
 
-        return new JsonResponse($data);
+        return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
     }
 
     #[Route('/book/year/{year}', name: 'books_by_year')]
     public function books_by_year($year): Response
     {    
-        $books = $this->em->getRepository(Book::class)->findYear($year);
-        $data = [];
-        foreach ($books as $book) {
-            $data[] = $book->toArray();
+        $books = $this->em->getRepository(Book::class)->findYear($year); // Obtenemos los libros del año seleccionado  
+        $data = []; // Array donde guardaremos los libros
+
+        foreach ($books as $book) { // Recorremos todos los libros del año seleccionado
+            $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
         }
 
-        return new JsonResponse($data);
+        return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
     }
 
     // Creamos una ruta dinámica donde recibimos la categoría que nos llega desde el botón handleFilterByCategory
@@ -72,50 +74,59 @@ final class BookController extends AbstractController
         $form = $this->createForm(BookType::class, $book);
         
         // Unimos los campos de texto y los archivos para que el formulario los procese de una vez
-        $form->submit(array_merge($request->request->all(), $request->files->all()));
+        $form->submit(array_merge($request->request->all(), $request->files->all())); 
+        /*
+            $request->request->all() -> Devuelve todos los campos de texto del formulario (título, autor, ISBN...)
+            $request->files->all() -> Devuelve todos los archivos del formulario (imagen)
+            array_merge() -> Une los dos arrays/listas (en este caso, los campos de texto y los archivos) para tener toda la información del libro en un solo paquete.
+            $form->submit() -> Envía los datos al formulario para que los procese
+        */
 
+        // Si el formulario es válido, guardamos el libro
         if ($form->isValid()) {
+            
             // Normalización de la categoría antes de guardar
-            if ($book->getCategory()) {
-                $book->setCategory(ucfirst(strtolower($book->getCategory())));
+            if ($book->getCategory()) { // Si el libro tiene categoría
+                $book->setCategory(ucfirst(strtolower($book->getCategory()))); // Convierte la categoría a "Ficción" (primera letra mayúscula y el resto minúsculas)
             }
 
-            if (!$book->getPublished()) {
-                $book->setPublished(new \DateTimeImmutable());
+            if (!$book->getPublished()) { // Si el libro no tiene fecha de publicación
+                $book->setPublished(new \DateTimeImmutable()); // Se le pone la fecha actual
             }
 
-            $this->em->persist($book);
+            $this->em->persist($book); // Guardamos el libro en la base de datos
 
             // Manejo de la imagen desde el formulario (ya validada por BookType)
-            $uploadedFile = $form->get('image')->getData();
-            if ($uploadedFile) {
-                $destination = $this->getParameter('kernel.project_dir') . '/public/images';
-                $isbn = $book->getIsbn();
-                $newFilename = ($isbn ?: uniqid()) . '.' . $uploadedFile->guessExtension();
+            $uploadedFile = $form->get('image')->getData(); // Obtenemos la imagen del formulario
+            if ($uploadedFile) { // Si la imagen existe
+                $destination = $this->getParameter('kernel.project_dir') . '/public/images'; // Obtenemos la ruta de la carpeta images
+                $isbn = $book->getIsbn(); 
+                $newFilename = ($isbn ?: uniqid()) . '.' . $uploadedFile->guessExtension(); // Obtenemos la extensión de la imagen
                 
+                // Intentamos mover la imagen a la carpeta images
                 try {
-                    $uploadedFile->move($destination, $newFilename);
+                    $uploadedFile->move($destination, $newFilename); // Movemos la imagen a la carpeta images
                     
-                    $image = new Image();
-                    $image->setRutaArchivo('/images/' . $newFilename);
-                    $image->setBook($book);
-                    $this->em->persist($image);
+                    $image = new Image(); // Creamos una nueva imagen
+                    $image->setRutaArchivo('/images/' . $newFilename); // Guardamos la ruta de la imagen
+                    $image->setBook($book); // Asociamos la imagen al libro
+                    $this->em->persist($image); // Guardamos la imagen en la base de datos
                 } catch (\Exception $e) {
                     // Si falla el movimiento físico, el libro se crea pero sin imagen
                 }
             }
 
-            $this->em->flush();
-            return new JsonResponse($book->toArray(), 201);
+            $this->em->flush(); // Guardamos todos los cambios en la base de datos
+            return new JsonResponse($book->toArray(), 201); // Devolvemos el libro en formato JSON
         }
 
         // Si el formulario NO es válido, devolvemos los errores
         $errors = [];
-        foreach ($form->getErrors(true) as $error) {
-            $errors[] = $error->getMessage();
+        foreach ($form->getErrors(true) as $error) { // Recorremos todos los errores del formulario
+            $errors[] = $error->getMessage(); // Guardamos el mensaje de error en el array $errors
         }
 
-        return new JsonResponse(['errors' => $errors], 400);
+        return new JsonResponse(['errors' => $errors], 400); // Devolvemos el array de errores en formato JSON
     }
 
     
