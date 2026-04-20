@@ -35,6 +35,10 @@ class Book
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'El autor es obligatorio.')]
+    #[Assert\Regex(
+        pattern: '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u',
+        message: 'El autor solo puede contener letras y espacios.'
+    )]
     private string $author;
 
     #[ORM\Column]
@@ -50,6 +54,10 @@ class Book
     private int $pages;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Regex(
+        pattern: '/^(\s*\S+\s*){0,100}$/',
+        message: 'La descripción no puede tener más de 100 palabras.'
+    )]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -57,6 +65,10 @@ class Book
 
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'La categoría es obligatoria.')]
+    #[Assert\Length(
+        min: 3,
+        minMessage: 'La categoría debe tener al menos {{ limit }} letras.'
+    )]
     private string $category;
 
     /**
