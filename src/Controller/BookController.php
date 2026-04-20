@@ -90,11 +90,8 @@ final class BookController extends AbstractController
                 $book->setCategory(ucfirst(strtolower($book->getCategory()))); // Convierte la categoría a "Ficción" (primera letra mayúscula y el resto minúsculas)
             }
 
-            if (!$book->getPublished()) { // Si el libro no tiene fecha de publicación
-                $book->setPublished(new \DateTimeImmutable()); // Se le pone la fecha actual
-            }
-
             $this->em->persist($book); // Guardamos el libro en la base de datos
+
 
             // Manejo de la imagen desde el formulario (ya validada por BookType)
             $uploadedFile = $form->get('image')->getData(); // Obtenemos la imagen del formulario
@@ -139,10 +136,15 @@ final class BookController extends AbstractController
             return new JsonResponse(['error' => 'Libro no encontrado'], 404);
         }
 
-        // Primero eliminamos las imágenes asociadas para evitar el error de clave foránea
+        // Primero eliminamos las imágenes asociadas para evitar el error de clave foránea y liberar espacio en disco
         foreach ($bookDelete->getImages() as $image) {
+            $filePath = $this->getParameter('kernel.project_dir') . '/public' . $image->getRutaArchivo();
+            if (file_exists($filePath)) {
+                unlink($filePath); // Borramos el archivo físico
+            }
             $this->em->remove($image);
         }
+
 
         $title = $bookDelete->getTitle();
         $this->em->remove($bookDelete);

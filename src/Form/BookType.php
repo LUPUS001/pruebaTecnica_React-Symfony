@@ -29,7 +29,7 @@ class BookType extends AbstractType
                 */
 
                 'input' => 'datetime_immutable', // Formato de fecha inmutable (no se puede modificar)
-                'required' => false, // No es obligatorio indicar una fecha de publicación
+                'required' => true, // Es obligatorio indicar una fecha de publicación
             ])
 
             ->add('publisher') // "" para la editorial

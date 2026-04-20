@@ -7,8 +7,11 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: BookRepository::class)]
+#[UniqueEntity(fields: ['isbn'], message: 'Este ISBN ya está registrado.')]
 class Book
 {
     #[ORM\Id]
@@ -16,26 +19,35 @@ class Book
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $isbn = null;
+    #[ORM\Column(length: 255, unique: true)]
+    #[Assert\NotBlank(message: 'El ISBN es obligatorio.')]
+    #[Assert\Isbn(message: 'El formato del ISBN no es válido.')]
+    private string $isbn;
 
     #[ORM\Column(length: 255)]
-    private ?string $title = null;
+    #[Assert\NotBlank(message: 'El título es obligatorio.')]
+    #[Assert\Length(max: 255)]
+    private string $title;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255)]
     private ?string $subtitle = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $author = null;
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'El autor es obligatorio.')]
+    private string $author;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $published = null;
+    #[ORM\Column]
+    #[Assert\NotBlank(message: 'La fecha de publicación es obligatoria.')]
+    private \DateTimeImmutable $published;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $publisher = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $pages = null;
+    #[ORM\Column]
+    #[Assert\NotBlank(message: 'El número de páginas es obligatorio.')]
+    #[Assert\PositiveOrZero(message: 'El número de páginas no puede ser negativo.')]
+    private int $pages;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
@@ -43,8 +55,9 @@ class Book
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $website = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $category = null;
+    #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'La categoría es obligatoria.')]
+    private string $category;
 
     /**
      * @var Collection<int, Image>
@@ -52,18 +65,18 @@ class Book
     #[ORM\OneToMany(targetEntity: Image::class, mappedBy: 'book')]
     private Collection $images;
 
-    public function __construct($isbn = null, $title = null, $subtitle = null, $author = null, $published = null, $publisher = null, $pages = null, $description = null, $website = null, $category = null)
+    public function __construct($isbn = '', $title = '', $subtitle = null, $author = null, $published = null, $publisher = null, $pages = null, $description = null, $website = null, $category = null)
     {
-        $this->isbn = $isbn;
-        $this->title = $title;
+        $this->isbn = $isbn ?? '';
+        $this->title = $title ?? '';
         $this->subtitle = $subtitle;
-        $this->author = $author;
-        $this->published = $published;
+        $this->author = $author ?? '';
+        $this->published = $published ?? new \DateTimeImmutable();
         $this->publisher = $publisher;
-        $this->pages = $pages;
+        $this->pages = $pages ?? 0;
         $this->description = $description;
         $this->website = $website;
-        $this->category = $category;
+        $this->category = $category ?? '';
         $this->images = new ArrayCollection();
     }
 
@@ -72,7 +85,7 @@ class Book
         return $this->id;
     }
 
-    public function getIsbn(): ?string
+    public function getIsbn(): string
     {
         return $this->isbn;
     }
@@ -84,7 +97,7 @@ class Book
         return $this;
     }
 
-    public function getTitle(): ?string
+    public function getTitle(): string
     {
         return $this->title;
     }
@@ -108,7 +121,7 @@ class Book
         return $this;
     }
 
-    public function getAuthor(): ?string
+    public function getAuthor(): string
     {
         return $this->author;
     }
@@ -120,12 +133,12 @@ class Book
         return $this;
     }
 
-    public function getPublished(): ?\DateTimeImmutable
+    public function getPublished(): \DateTimeImmutable
     {
         return $this->published;
     }
 
-    public function setPublished(?\DateTimeImmutable $published): static
+    public function setPublished(\DateTimeImmutable $published): static
     {
         $this->published = $published;
 
@@ -137,14 +150,14 @@ class Book
         return $this->publisher;
     }
 
-    public function setPublisher(string $publisher): static
+    public function setPublisher(?string $publisher): static
     {
         $this->publisher = $publisher;
 
         return $this;
     }
 
-    public function getPages(): ?int
+    public function getPages(): int
     {
         return $this->pages;
     }
@@ -180,7 +193,7 @@ class Book
         return $this;
     }
 
-    public function getCategory(): ?string
+    public function getCategory(): string
     {
         return $this->category;
     }

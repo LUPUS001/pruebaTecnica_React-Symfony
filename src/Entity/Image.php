@@ -17,7 +17,8 @@ class Image
     private ?string $rutaArchivo = null;
 
     #[ORM\ManyToOne(inversedBy: 'images')]
-    private ?Book $book = null;
+    #[ORM\JoinColumn(nullable: false)]
+    private Book $book;
 
     public function getId(): ?int
     {
@@ -36,15 +37,16 @@ class Image
         return $this;
     }
 
-    public function getBook(): ?Book
+    public function getBook(): Book
     {
         return $this->book;
     }
 
-    public function setBook(?Book $book): static
+    public function setBook(Book $book): static
     {
         $this->book = $book;
 
         return $this;
     }
+
 }
