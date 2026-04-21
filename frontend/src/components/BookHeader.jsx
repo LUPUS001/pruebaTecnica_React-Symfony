@@ -1,3 +1,5 @@
+import ImageCarousel from "./ImageCarousel";
+
 // Este componente muestra la información del libro seleccionado
 
 function BookHeader({ selectedBook }) {
@@ -10,15 +12,10 @@ function BookHeader({ selectedBook }) {
             {selectedBook && selectedBook.isbn ? (
                 <>
                     <div className="selected-book-image-container">
-                        {selectedBook.images && selectedBook.images.length > 0 ? (
-                            <img
-                                className="selected-book-image"
-                                src={selectedBook.images[0].ruta}
-                                alt={selectedBook.title}
-                            />
-                        ) : (
-                            <div className="no-image-placeholder">Sin imagen</div>
-                        )}
+                        {/* Pasamos las imágenes y el título del libro al componente ImageCarousel */}
+                        {/* La key es necesaria porque sino, al cambiar de libro, React no se entera de que tiene que volver a renderizar el carrusel y deja la imagen en blanco */}
+                        <ImageCarousel key={selectedBook.isbn} images={selectedBook.images} title={selectedBook.title} />
+
                     </div>
                     <div className="selected-book-info">
                         <h2>{selectedBook.title}</h2>

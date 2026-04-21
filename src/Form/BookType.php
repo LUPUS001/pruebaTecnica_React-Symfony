@@ -45,13 +45,17 @@ class BookType extends AbstractType
                    para guardar la imagen en la ruta que indiquemos (public/images) y que la ruta se guarde en la tabla Image */
 
                 'required' => false, // No es obligatorio subir una imagen
+                'multiple' => true, // Permitimos subir múltiples imágenes a la vez (sin esto el navegador solo permitiría subir una imagen)
                 
                 'constraints' => [ // Restricciones para el archivo
-                    new Assert\File (
-                        maxSize: '30000k', // 30MB
-                        extensions: ['webp', 'jpg', 'jpeg', 'png'],
-                        extensionsMessage: 'Por favor sube un formato de archivo valido (png, webp, jpg, jpeg)',
-                    )
+                    new Assert\All([ // Aplicamos las restricciones a cada archivo subido (Assert\All coge la lista de imágenes y aplica las restricciones a cada una)
+                        // básicamente le decimos valida cada una de las fotos, no solo la primera que se suba 
+                        new Assert\File (
+                            maxSize: '30000k', // 30MB
+                            extensions: ['webp', 'jpg', 'jpeg', 'png'],
+                            extensionsMessage: 'Por favor sube un formato de archivo valido (png, webp, jpg, jpeg)',
+                        )
+                    ])
                 ],
             ])
             ->add('Subir', SubmitType::class) // Botón para enviar el formulario

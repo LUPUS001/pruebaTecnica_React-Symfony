@@ -30,7 +30,7 @@ function BookAdd(props) {
 
     // En un principio el formulario enviaba archivos de texto plano (JSON) pero como 
     // las imagenes son archivos binarios, necesitamos usar FormData para enviar archivos binarios
-    const [image, setImage] = useState(null);
+    const [images, setImages] = useState([]); // Cambiado a array para soportar múltiples imágenes
 
     // Este es el estado que nos permitirá recibir los errores que hemos configurado en BookType
     // y mostrarlos en el frontend (con esto detectará por ejemplo si la imagen es demasiado grande)
@@ -55,8 +55,13 @@ function BookAdd(props) {
         formData.append("category", category); // Usamos el nuevo estado category
         formData.append("pages", pages);
         formData.append("published", published);
-        if (image) {
-            formData.append("image", image);
+
+        // Añadimos todas las imágenes seleccionadas al FormData
+        // El nombre debe terminar en [] para que PHP lo reciba como un array
+        if (images && images.length > 0) {
+            for (let i = 0; i < images.length; i++) {
+                formData.append("image[]", images[i]);
+            }
         }
 
         // Hacemos la petición POST al webservice add_book
@@ -78,8 +83,8 @@ function BookAdd(props) {
                 setCategory("");
                 setPages("");
                 setPublished(today);
-                setImage(null);
-                e.target.reset();
+                setImages([]); // Limpiamos las imágenes para que no se muestren en el siguiente renderizado 
+                e.target.reset(); // Limpiamos el formulario
 
                 // Feedback visual en lugar de alert
                 setSuccess(true);
@@ -187,15 +192,21 @@ function BookAdd(props) {
                     />
                 </div>
 
-                {/* Campo para subir la imagen de portada del libro */}
+                {/* Campo para subir las imágenes de portada del libro (puedes subir varias) */}
                 <div className="file-input-container">
-                    <label htmlFor="image-upload">Subir imagen de portada:</label> {/* Etiqueta del campo */}
+                    <label htmlFor="image-upload">Subir imágenes de portada (puedes elegir varias):</label> {/* Etiqueta del campo */}
                     <input
                         id="image-upload" // ID del campo
-                        name="image" // Nombre del campo que coincide con el nombre de la propiedad en el objeto Book
+                        name="image[]" // Nombre del campo (usamos [] para que PHP lo reciba como array / lista)
                         type="file" // Tipo de campo
                         accept="image/*" // Solo permite archivos que sean imágenes 
-                        onChange={(e) => setImage(e.target.files[0])} // Función que se ejecuta cuando cambia el valor del campo (actualiza el estado image)
+                        multiple // Permitimos seleccionar múltiples archivos
+                        onChange={(e) => setImages(Array.from(e.target.files))} // Convertimos FileList a Array y actualizamos el estado
+                        /*
+                         * El input type="file" recibe los archivos seleccionados en un objeto llamado FileList
+                         * FileList es un objeto similar a un array que contiene los archivos seleccionados (es el objeto que recibe e.target.files)
+                         * lo convertimos a Array con Array.from() para poder manejarlo como un array y poder recorrerlo con map() entre otras cosas
+                         */
                         disabled={isSubmitting}
                     />
                 </div>

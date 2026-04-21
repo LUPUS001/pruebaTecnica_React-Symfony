@@ -93,23 +93,28 @@ final class BookController extends AbstractController
             $this->em->persist($book); // Guardamos el libro en la base de datos
 
 
-            // Manejo de la imagen desde el formulario (ya validada por BookType)
-            $uploadedFile = $form->get('image')->getData(); // Obtenemos la imagen del formulario
-            if ($uploadedFile) { // Si la imagen existe
+            // Manejo de las imágenes desde el formulario (ya validadas por BookType)
+            $uploadedFiles = $form->get('image')->getData(); // Obtenemos las imágenes del formulario (ahora es un array)
+            if ($uploadedFiles) { // Si hay imágenes
                 $destination = $this->getParameter('kernel.project_dir') . '/public/images'; // Obtenemos la ruta de la carpeta images
-                $isbn = $book->getIsbn(); 
-                $newFilename = ($isbn ?: uniqid()) . '.' . $uploadedFile->guessExtension(); // Obtenemos la extensión de la imagen
                 
-                // Intentamos mover la imagen a la carpeta images
-                try {
-                    $uploadedFile->move($destination, $newFilename); // Movemos la imagen a la carpeta images
+                foreach ($uploadedFiles as $uploadedFile) { // Recorremos cada imagen subida
+                    $isbn = $book->getIsbn(); 
+                    // Generamos un nombre único para cada imagen para evitar que choquen, ya que al subir una imagen esta "hereda como nombre" 
+                    // el isbn del libro, si hay varias imágenes necesitamos el uniqid para que no tengan el mismo nombre y no se sobrescriban entre sí
+                    $newFilename = ($isbn ?: uniqid()) . '-' . uniqid() . '.' . $uploadedFile->guessExtension(); 
                     
-                    $image = new Image(); // Creamos una nueva imagen
-                    $image->setRutaArchivo('/images/' . $newFilename); // Guardamos la ruta de la imagen
-                    $image->setBook($book); // Asociamos la imagen al libro
-                    $this->em->persist($image); // Guardamos la imagen en la base de datos
-                } catch (\Exception $e) {
-                    // Si falla el movimiento físico, el libro se crea pero sin imagen
+                    // Intentamos mover la imagen a la carpeta images
+                    try {
+                        $uploadedFile->move($destination, $newFilename); // Movemos la imagen a la carpeta images
+                        
+                        $image = new Image(); // Creamos una nueva imagen
+                        $image->setRutaArchivo('/images/' . $newFilename); // Guardamos la ruta de la imagen
+                        $image->setBook($book); // Asociamos la imagen al libro
+                        $this->em->persist($image); // Guardamos la imagen en la base de datos
+                    } catch (\Exception $e) {
+                        // ya que catch esta vacío, php termina el try-catch y como estamos dentro de un foreach, pasa a la siguiente imagen (es como poner 'continue')
+                    }
                 }
             }
 

@@ -1,78 +1,101 @@
-# Tutorial: Blindando una Aplicación Symfony/React
+# Tutorial: Implementación de Múltiples Imágenes y Carrusel 
 
-En este tutorial repasamos los 4 pilares que hemos implementado hoy para transformar una aplicación básica en una profesional y robusta.
-
----
-
-## Paso 1: Blindar la Base de Datos (Entidades)
-
-En lugar de confiar en que el usuario mande datos correctos, forzamos la estructura en la entidad.
-
-### ¿Cómo lo hicimos?
-Usamos **atributos PHP 8** en `src/Entity/Book.php`:
-1.  **Tipado estricto**: Cambiamos `private ?string` por `private string` para que el código falle si falta el dato.
-2.  **Validaciones Profesionales**:
-    - `#[Assert\NotBlank]`: Asegura que el campo no llegue vacío.
-    - `#[Assert\Isbn]`: Valida automáticamente el algoritmo matemático del ISBN.
-    - `#[UniqueEntity]`: (A nivel de clase) Verifica que no existan duplicados en la base de datos antes de guardar.
-
-### Aprendizaje clave:
-> El backend es la última línea de defensa. Si la base de datos es sólida, el resto de la app será estable.
+En este tutorial aprenderás cómo transformar un sistema de carga de imagen única en uno de múltiples imágenes con visualización interactiva (carrusel), integrando Symfony (Backend) y React (Frontend).
 
 ---
 
-## Paso 2: Validaciones Avanzadas (Regex)
+## 🛠️ Fase 1: El Backend (Symfony)
 
-A veces necesitas reglas que no existen por defecto (como el límite de palabras).
+El objetivo es permitir que el formulario reciba un array de archivos y que el controlador los guarde uno a uno.
 
-### ¿Cómo lo hicimos?
-Usamos `#[Assert\Regex]`, que es la "navaja suiza" de las validaciones:
-- **Límite de palabras**: `pattern: '/^(\s*\S+\s*){0,100}$/'`. Esto busca grupos de caracteres separados por espacios y cuenta hasta 100.
-- **Solo letras**: `pattern: '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u'`. Esto bloquea cualquier cosa que no sea letra o espacio.
+### 1. Preparar el Formulario (`BookType.php`)
+Por defecto, un campo `FileType` solo acepta un archivo. Debemos habilitar la opción `multiple`.
 
----
-
-## Paso 3: Gestión de Archivos Inteligente
-
-Ahorrar espacio es vital. Un error común es borrar el registro pero dejar la foto "viva" en el disco.
-
-### ¿Cómo lo hicimos?
-En `BookController.php`, antes de ejecutar `$em->remove($book)`, buscamos la ruta física:
 ```php
-$filePath = $this->getParameter('kernel.project_dir') . '/public' . $image->getRutaArchivo();
-if (file_exists($filePath)) {
-    unlink($filePath); // <--- Borra el archivo real del disco
+// src/Form/BookType.php
+->add('image', FileType::class, [
+    'multiple' => true, // Permite seleccionar varios archivos
+    'mapped' => false,   // No se mapea directamente a la entidad Book
+    'constraints' => [
+        new Assert\All([ // IMPORTANTE: Aplica validaciones a CADA archivo del array
+            new Assert\File([
+                'maxSize' => '30MB',
+                'extensions' => ['jpg', 'png', 'webp'],
+            ])
+        ])
+    ],
+])
+```
+
+### 2. Procesar el Array en el Controlador (`BookController.php`)
+Ahora que el formulario devuelve un array (`$uploadedFiles`), debemos iterar sobre él.
+
+```php
+// src/Controller/BookController.php
+$uploadedFiles = $form->get('image')->getData(); // Esto ahora es un array
+
+if ($uploadedFiles) {
+    foreach ($uploadedFiles as $file) {
+        // Generamos un nombre único: ISBN + Hash
+        $newFilename = $book->getIsbn() . '-' . uniqid() . '.' . $file->guessExtension();
+        
+        $file->move($destination, $newFilename); // Guardado físico
+
+        $image = new Image();
+        $image->setRutaArchivo('/images/' . $newFilename);
+        $image->setBook($book); // Vinculamos a la entidad Book
+        $this->em->persist($image);
+    }
+    $this->em->flush();
 }
 ```
 
 ---
 
-## Paso 4: Experiencia de Usuario (React)
+## ⚛️ Fase 2: El Frontend (React)
 
-Evitar que el usuario se desespere o haga 20 clics mientras el servidor procesa.
+El objetivo es enviar los archivos como un array y crear un componente para visualizarlos.
 
-### ¿Cómo lo hicimos?
-Creamos un estado `isSubmitting`:
-1.  Al empezar el envío: `setIsSubmitting(true)`.
-2.  El botón se desactiva: `<button disabled={isSubmitting}>`.
-3.  Al terminar (éxito o error): `setIsSubmitting(false)`.
+### 1. Enviar múltiples archivos (`BookAdd.jsx`)
+En React, para enviar archivos usamos `FormData`. Para que PHP lo entienda como un array, la clave debe terminar en `[]`.
+
+```javascript
+// Al seleccionar archivos:
+onChange={(e) => setImages(Array.from(e.target.files))}
+
+// Al enviar (handleSubmit):
+const formData = new FormData();
+images.forEach((file) => {
+    formData.append("image[]", file); // Clave con []
+});
+```
+
+### 2. El Componente `ImageCarousel.jsx`
+Este componente gestiona su propia navegación. Su lógica principal es el estado `currentIndex`.
+
+*   **Puntos clave del diseño:**
+    *   `position: absolute` para las imágenes para que se superpongan.
+    *   `opacity: 1/0` y `transition` para el efecto de fundido.
+    *   `stopPropagation()` en los botones para que al hacer clic en "Siguiente" no se active el clic de la tarjeta del libro.
 
 ---
 
-## Paso 5: Sincronización (Migraciones)
+## ✨ Fase 3: UX y Diseño Premium
 
-Después de cambiar la entidad, hay que avisar a MySQL.
+### 1. Estrategia de Visualización
+*   **Lista (`BookCard`)**: Mostramos solo la primera imagen (`book.images[0]`). Esto mantiene la interfaz limpia y rápida de cargar.
+*   **Detalle (`BookHeader`)**: Al seleccionar un libro, mostramos el carrusel completo. Es aquí donde el usuario quiere ver todos los detalles.
 
-### Comandos utilizados:
-1.  `php bin/console make:migration`: Symfony compara tu código con la base de datos y crea un archivo SQL automático.
-2.  `php bin/console doctrine:migrations:migrate`: Aplica esos cambios (crea los `NOT NULL` y el `UNIQUE`).
+### 2. Toques Finales en el CSS
+Para un look "premium", usamos:
+*   **Glassmorphism**: Botones con fondo semi-transparente y desenfoque (`backdrop-filter: blur(4px)`).
+*   **Micro-animaciones**: Un ligero `transform: scale(1.05)` en las imágenes inactivas que se suaviza al activarse.
 
 ---
 
-### Resumen para recordar:
-- **Entidad**: Define qué es obligatorio.
-- **Controller**: Gestiona la lógica (borrados, archivos).
-- **React**: Informa al usuario de lo que está pasando.
-- **Migración**: Sincroniza el código con la base de datos.
+## 🎓 Resumen de Aprendizaje
+1.  **Backend**: `multiple => true` + Bucle `foreach` en el controlador.
+2.  **Frontend**: `input multiple` + `FormData.append("key[]", file)`.
+3.  **UI**: Componente modular para el carrusel + separación entre miniatura (catálogo) y carrusel (detalle).
 
 ¡Espero que este recorrido te ayude a dominar la gestión de archivos y carruseles en tus futuros proyectos!
