@@ -22,17 +22,32 @@ final class BookController extends AbstractController
 
     // Webservices REST que devuelven información en formato JSON
 
-    #[Route('/books', name: 'app_book')]
-    public function index(): Response
+    #[Route('/books', name: 'app_book', methods: ['GET'])]
+    public function index(Request $request): Response
     {
-        $books = $this->em->getRepository(Book::class)->findAll(); // Obtenemos todos los libros
-        $data = []; // Array donde guardaremos los libros
+        $page = $request->query->getInt('page', 1); // Página actual, por defecto 1
+        $limit = $request->query->getInt('limit', 12); // Libros por página, por defecto 12 (múltiplo de 2, 3, 4 para grid)
+        $offset = ($page - 1) * $limit; // Cálculo de dónde empezar a leer en la base de datos
 
-        foreach ($books as $book) { // Recorremos todos los libros
-            $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
+        $repository = $this->em->getRepository(Book::class);
+        
+        // Obtenemos los libros paginados y ordenados por los más recientes primero
+        $books = $repository->findBy([], ['id' => 'DESC'], $limit, $offset);
+        $totalBooks = $repository->count([]); // Total de libros para calcular las páginas totales
+
+        $data = [];
+        foreach ($books as $book) {
+            $data[] = $book->toArray();
         }
 
-        return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
+        // Devolvemos tanto los datos como los metadatos de paginación
+        return new JsonResponse([
+            'books' => $data,
+            'total' => $totalBooks,
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => ceil($totalBooks / $limit)
+        ]);
     }
 
     // Webservices REST que permiten Create y Delete
