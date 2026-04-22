@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Validator\Validator\ValidatorInterface; // Importamos el validador para validar los datos del libro 
 use App\Entity\Book;
 use App\Entity\Image;
 use App\Form\BookType;
@@ -33,38 +34,6 @@ final class BookController extends AbstractController
 
         return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
     }
-
-    #[Route('/book/year/{year}', name: 'books_by_year')]
-    public function books_by_year($year): Response
-    {    
-        $books = $this->em->getRepository(Book::class)->findYear($year); // Obtenemos los libros del año seleccionado  
-        $data = []; // Array donde guardaremos los libros
-
-        foreach ($books as $book) { // Recorremos todos los libros del año seleccionado
-            $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
-        }
-
-        return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
-    }
-
-    // Creamos una ruta dinámica donde recibimos la categoría que nos llega desde el botón handleFilterByCategory
-    #[Route('/book/category/{category}', name: 'category_book')]
-    public function category_book($category): Response
-    {
-        // Normalizamos la categoría (Ej: "ficción" -> "Ficción") para asegurar que coincida con la DB
-        $books = $this->em->getRepository(Book::class)->findBy(['category' => ucfirst(strtolower($category))]);            
-        $data = [];
-
-        foreach ($books as $book) {
-            $data[] = $book->toArray();
-        }
-
-        return new JsonResponse($data);
-    }
-    // Ahora en lugar de necesitar un webservice para cada categoría, hacemos todo este trabajo en un solo webservice 'category_book' 
-    
-
-
 
     // Webservices REST que permiten Create y Delete
     
@@ -160,9 +129,122 @@ final class BookController extends AbstractController
 
 
 
+    /**
+     * Endpoint para la importación masiva de libros vía JSON.
+     * Estructura esperada: {"books": [{"isbn": "...", "title": "...", ...}]}
+     */
+    #[Route('/book/import', name: 'api_book_import_json', methods: ['POST'])]
+    public function import_books(Request $request, ValidatorInterface $validator): Response {
+        $content = $request->getContent(); // Obtenemos el contenido del request/petición (el archivo JSON)
+        $data = json_decode($content, true); // Decodificamos el contenido del request y lo convertimos a un array asociativo
+
+        if (!$data || !isset($data['books'])) { // Si el contenido del request no es válido o no tiene la clave 'books'
+            return new JsonResponse(['error' => 'Formato JSON inválido. Se espera {"books": [...]}'], 400); // Devolvemos un error
+        }
+
+        $importedCount = 0; // Contador de libros importados
+        $skippedCount = 0; // Contador de libros saltados (por ISBN duplicado o inválido)
+
+        foreach ($data['books'] as $bookData) { // Recorremos todos los libros
+            $isbn = $bookData['isbn'] ?? null; // Obtenemos el ISBN del libro
+            
+            // Antes de guardar el libro, verificamos si el ISBN es válido
+            // Si el ISBN no es válido, saltamos el libro
+            if (!$isbn) { 
+                $skippedCount++; // Incrementamos el contador de libros saltados
+                continue; // Pasamos al siguiente libro
+            }
+
+            // Y verificamos si ya existe
+            $existingBook = $this->em->getRepository(Book::class)->findOneBy(['isbn' => $isbn]); // Buscamos si el libro ya existe
+            if ($existingBook) { // Si el libro ya existe
+                $skippedCount++; // Incrementamos el contador de libros saltados
+                continue; // Pasamos al siguiente libro
+            }
+
+            // 3. Creación del objeto y mapeo de datos
+            $book = new Book();
+            $book->setIsbn($isbn);
+            $book->setTitle($bookData['title'] ?? 'Sin título');
+            $book->setSubtitle($bookData['subtitle'] ?? null);
+            $book->setAuthor($bookData['author'] ?? 'Anónimo');
+            $book->setPublisher($bookData['publisher'] ?? null);
+            $book->setPages((int)($bookData['pages'] ?? 0));
+            $book->setDescription($bookData['description'] ?? null);
+            $book->setWebsite($bookData['website'] ?? null);
+            
+            // Categoría con normalización
+            $category = $bookData['category'] ?? 'General';
+            $book->setCategory(ucfirst(strtolower($category)));
+
+            // Fecha de publicación
+            if (isset($bookData['published'])) {
+                try { 
+                    $book->setPublished(new \DateTimeImmutable($bookData['published']));
+                } catch (\Exception $e) { 
+                    $book->setPublished(new \DateTimeImmutable());
+                }
+            } else {
+                $book->setPublished(new \DateTimeImmutable());
+            }
+
+            // 4. VALIDACIÓN ESTRICTA (Detección de las reglas de Book.php)
+            // Validamos el libro ya relleno según las reglas definidas en la entidad Book.php (Asserts)
+            $errors = $validator->validate($book); 
+            if (count($errors) > 0) { // Si hay errores de validación (ej: descripción demasiado larga, autor con números...), lo saltamos
+                $skippedCount++;
+                continue;
+            }
+
+            $this->em->persist($book);
+            $importedCount++;
+        }
+
+
+        $this->em->flush(); // Guardamos todos los cambios en la base de datos
+
+        // Devolvemos un mensaje de éxito con el número de libros importados y saltados
+        return new JsonResponse([
+            'message' => 'Importación completada',
+            'imported' => $importedCount, 
+            'skipped' => $skippedCount 
+        ]);
+    }
+
+    #[Route('/book/year/{year}', name: 'books_by_year', methods: ['GET'])]
+    public function books_by_year($year): Response
+    {    
+        $books = $this->em->getRepository(Book::class)->findYear($year); // Obtenemos los libros del año seleccionado  
+        $data = []; // Array donde guardaremos los libros
+
+        foreach ($books as $book) { // Recorremos todos los libros del año seleccionado
+            $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
+        }
+
+        return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
+    }
+
+    // Creamos una ruta dinámica donde recibimos la categoría que nos llega desde el botón handleFilterByCategory
+    #[Route('/book/category/{category}', name: 'category_book', methods: ['GET'])]
+    public function category_book($category): Response
+    {
+        // Normalizamos la categoría (Ej: "ficción" -> "Ficción") para asegurar que coincida con la DB
+        $books = $this->em->getRepository(Book::class)->findBy(['category' => ucfirst(strtolower($category))]);            
+        $data = [];
+
+        foreach ($books as $book) {
+            $data[] = $book->toArray();
+        }
+
+        return new JsonResponse($data);
+    }
+    // Ahora en lugar de necesitar un webservice para cada categoría, hacemos todo este trabajo en un solo webservice 'category_book' 
+
+
     // La información de un libro concreto, pasando como parámetro un ISBN y que devolverá las imágenes
     // Obtenemos la información de un libro y sus imágenes asociadas
-    #[Route('/book/{isbn}', name: 'find_book')]
+    // IMPORTANTE: Esta ruta debe ir AL FINAL de las que empiezan por /book/ para no interceptar otras (ej: /book/import)
+    #[Route('/book/{isbn}', name: 'find_book', methods: ['GET'])]
     public function find_book($isbn): Response {
         $book = $this->em->getRepository(Book::class)->findBookImagen($isbn);
         

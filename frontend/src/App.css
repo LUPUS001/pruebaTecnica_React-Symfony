@@ -366,3 +366,29 @@ section {
     font-size: 0.8em;
     cursor: pointer;
 }
+
+/* Estilos extra para el botón de importación */
+.import-button {
+    background-color: #f0f0f0;
+    border: 1px dashed #999;
+    /* Borde punteado para que se note que es un botón de importación */
+    color: #333;
+    transition: all 0.3s ease;
+}
+
+.import-button:hover {
+    background-color: #e0e0e0;
+    border-color: #666;
+    transform: translateY(-2px);
+    /* Efecto de que el botón se levanta al pasar el ratón */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* Sombra para dar profundidad */
+}
+
+/* Estilo para que el usuario no pueda importar una segunda vez mientras se está importando */
+.import-button:disabled {
+    opacity: 0.6;
+    /* El botón se ve "apagado", un poco transparente para indicar que no se puede usar */
+    cursor: not-allowed;
+    /* El cursor cambia a "no permitido" */
+}

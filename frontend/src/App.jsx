@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import BookList from "./components/BookList";
 import BookAdd from "./components/BookAdd";
 import BookHeader from "./components/BookHeader";
+import BookImport from "./components/BookImport";
 import "./App.css";
+
 
 function App() {
     const [books, setBooks] = useState([]); // Array para guardar los libros
@@ -137,7 +139,11 @@ function App() {
                 <button onClick={handleFilterByCategory} className="filter-button">
                     Filtrar por categoría
                 </button>
+                
+                {/* Botón para importar JSON */}
+                <BookImport onImportSuccess={fetchAllBooks} />
             </section>
+
 
             {/* Menú de Categorías */}
             <select onChange={handleCategoryChange} className="filter-select">
