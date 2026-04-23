@@ -7,8 +7,8 @@ security:
     providers:
         # used to reload user from session & read persistence for light weight user objects
         app_user_provider:
-            entity:
-                class: App\Entity\User
+            entity: # Busca en la entidad 'User' y usa el campo 'email' para buscar usuarios
+                class: App\Entity\User 
                 property: email
     firewalls:
         dev:
@@ -16,16 +16,28 @@ security:
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
         main:
-            lazy: true
-            provider: app_user_provider
+            lazy: true # Carga el usuario solo cuando es necesario
+            provider: app_user_provider # Para buscar usuarios use la configuracion de providers de arriba
+            
+            # Login tradicional con formulario
             form_login:
-                login_path: app_login
+                login_path: app_login # Ruta del formulario de login
+                check_path: app_login # Ruta que verifica el login
+                enable_csrf: true # Habilita el CSRF (Cross-Site Request Forgery)
+                
+                # A donde va el usuario despues de iniciar sesion (cuando el login sea correcto, lo mandamos al frontend de React)
+                default_target_path: http://localhost:5173/
+                always_use_default_target_path: true # Redirige siempre a React después de iniciar sesión
+            
+            # Login con JSON (para peticiones AJAX con las que enviamos el email y la contraseña en formato JSON)
+            json_login:
                 check_path: app_login
-                enable_csrf: true
+            
+            # Logout (cerrar sesión)
             logout:
                 path: app_logout
-                # where to redirect after logout
-                # target: app_any_route
+                target: logout_success # Redirige a la ruta interna que nos envía a React
+
 
 
     # Note: Only the *first* matching rule is applied

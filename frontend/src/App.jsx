@@ -7,19 +7,30 @@ import "./App.css";
 
 
 function App() {
-    const [books, setBooks] = useState([]); // Array para guardar los libros
-    const [selectedBook, setSelectedBook] = useState(null); // lo ponemos como null porque es un objeto y no un array, y al ser null no muestra nada al principio y no da error al cargar la página 
-
-    // allCategories guarda la lista completa de categorías disponibles.
-    // Lo separamos del estado 'books' para que, al filtrar libros, no perdamos las opciones del menú desplegable.
+    const [books, setBooks] = useState([]);
+    const [user, setUser] = useState(null); // Estado para el usuario logueado (por defecto es null porque al cargar al app, no hay nadie conectado)
+    const [selectedBook, setSelectedBook] = useState(null);
     const [allCategories, setAllCategories] = useState([]);
-
     const [allYears, setAllYears] = useState([]);
 
-    // Usamos useEffect para obtener todos los libros cuando el componente se monta
+
     useEffect(() => {
         fetchAllBooks();
-    }, []);
+        checkUserSession(); // Comprobamos si hay sesión al cargar (si el usuario estaba logueado, se mantendrá logueado)
+    }, []); // [] significa que se ejecutará solo una vez, al cargar la página
+
+    const checkUserSession = async () => {
+        try {
+            const response = await fetch("/api/user/status"); // Hacemos una petición a la ruta /api/user/status para obtener la información del usuario
+            if (response.ok) { // Si la respuesta es exitosa (código 200)
+                const data = await response.json(); // Convertimos la respuesta a JSON
+                setUser(data.user); // Guardamos el usuario en el estado 'user'
+            }
+        } catch (error) {
+            // Si falla o no hay sesión, el usuario sigue siendo null
+        }
+    };
+
 
     // Función que obtiene todos los libros de la base de datos
     const fetchAllBooks = async () => {
@@ -125,7 +136,21 @@ function App() {
 
     return (
         <div className="app-container">
-            <BookHeader selectedBook={selectedBook} /> {/* selectedBook es el libro que se selecciona en la lista de libros */}
+            <header style={{ padding: '10px', background: '#f8f9fa', borderBottom: '1px solid #ddd', marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
+                <h1>Catálogo de Libros</h1>
+                {user ? ( // Si el usuario está logueado, mostramos su email y un botón para cerrar sesión
+                    <div>
+                        <span>Hola, <strong>{user.email}</strong></span>
+                        <a href="http://localhost:8000/logout" style={{ marginLeft: '15px', color: 'red' }}>Cerrar sesión</a>
+                    </div>
+                ) : ( // Si el usuario no está logueado, mostramos un enlace para iniciar sesión
+                    <a href="http://localhost:8000/login">Iniciar sesión</a>
+                )}
+
+            </header>
+
+            <BookHeader selectedBook={selectedBook} />
+
 
             {/* Botones para filtrar el catálogo */}
             <section>
@@ -139,7 +164,7 @@ function App() {
                 <button onClick={handleFilterByCategory} className="filter-button">
                     Filtrar por categoría
                 </button>
-                
+
                 {/* Botón para importar JSON */}
                 <BookImport onImportSuccess={fetchAllBooks} />
             </section>

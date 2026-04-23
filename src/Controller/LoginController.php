@@ -12,7 +12,13 @@ final class LoginController extends AbstractController
     #[Route('/login', name: 'app_login')]
     public function index(AuthenticationUtils $authenticationUtils): Response
     {
+        // Si el usuario ya tiene sesión abierta, lo redirige directamente de vuelta a React en lugar de mostrarle el formulario otra vez.
+        if ($this->getUser()) { 
+            return $this->redirect('http://localhost:5173/');
+        }
+
         // aquí guardaremos el error que haya ocurrido mientras se intentaba iniciar de sesion (Usuario no encontrado, contraseña incorrecta...)
+
         $error = $authenticationUtils->getLastAuthenticationError(); 
 
         $lastUsername = $authenticationUtils->getLastUsername();
