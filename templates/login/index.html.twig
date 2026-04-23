@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Hello LoginController!{% endblock %}
+
+{% block body %}
+    {% if app.user %}
+        <p>Identificado como: <strong>{{ app.user.email }}</strong></p>
+        <a href="{{ path('app_logout') }}">Cerrar sesión</a>
+    {% else %}
+        <form method="post">
+            {% if error %}
+                <div style="color: red;">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+            {% endif %}
+
+            <h2>Iniciar sesión</h2>
+            
+            <p>
+                <label>Email:</label><br>
+                <input type="email" value="{{ last_username }}" name="_username" required autofocus>
+            </p>
+            <p>
+                <label>Contraseña:</label><br>
+                <input type="password" name="_password" required>
+            </p>
+
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+            <button type="submit">Entrar</button>
+            
+            <p>
+                <a href="{{ path('user_registration') }}">Crear cuenta</a>
+            </p>
+        </form>
+    {% endif %}
+{% endblock %}
+
+
+
