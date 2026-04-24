@@ -12,6 +12,7 @@ function App() {
     const [selectedBook, setSelectedBook] = useState(null);
     const [allCategories, setAllCategories] = useState([]);
     const [allYears, setAllYears] = useState([]);
+    const [viewMode, setViewMode] = useState("all"); // "all" o "mine"
 
 
     useEffect(() => {
@@ -38,6 +39,22 @@ function App() {
             const response = await fetch("/books");
             const data = await response.json();
             setBooks(data);
+            setViewMode("all"); // all = todos los libros
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const fetchMyBooks = async () => {
+        try {
+            const response = await fetch("/api/me/books");
+            if (response.ok) {
+                const data = await response.json();
+                setBooks(data);
+                setViewMode("mine"); // mine = solo mis libros
+            } else {
+                alert("Debes iniciar sesión para ver tus libros");
+            }
         } catch (error) {
             console.error(error);
         }
@@ -165,8 +182,19 @@ function App() {
                     Filtrar por categoría
                 </button>
 
-                {/* Botón para importar JSON */}
-                <BookImport onImportSuccess={fetchAllBooks} />
+                {/* Botón para importar JSON - SOLO PARA LOGUEADOS */}
+                {user && <BookImport onImportSuccess={viewMode === "all" ? fetchAllBooks : fetchMyBooks} />}
+
+                {/* Botón para ver mis libros - SOLO PARA LOGUEADOS */}
+                {user && (
+                    <button
+                        onClick={viewMode === "all" ? fetchMyBooks : fetchAllBooks}
+                        className="filter-button"
+                        style={{ backgroundColor: viewMode === "mine" ? "#007bff" : "#6c757d", color: "white" }}
+                    >
+                        {viewMode === "all" ? "Ver mis libros" : "Ver todo el catálogo"}
+                    </button>
+                )}
             </section>
 
 
@@ -194,8 +222,8 @@ function App() {
                 ))}
             </select>
 
-            {/* Formulario para agregar un nuevo libro */}
-            <BookAdd setBooks={setBooks}></BookAdd>
+            {/* Formulario para agregar un nuevo libro - SOLO PARA LOGUEADOS */}
+            {user && <BookAdd setBooks={viewMode === "all" ? setBooks : fetchMyBooks}></BookAdd>}
             <hr />
             <br />
 

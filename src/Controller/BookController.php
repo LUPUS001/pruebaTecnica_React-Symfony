@@ -59,6 +59,7 @@ final class BookController extends AbstractController
                 $book->setCategory(ucfirst(strtolower($book->getCategory()))); // Convierte la categoría a "Ficción" (primera letra mayúscula y el resto minúsculas)
             }
 
+            $book->setOwner($this->getUser()); // Asignamos el usuario logueado como dueño del libro
             $this->em->persist($book); // Guardamos el libro en la base de datos
 
 
@@ -196,6 +197,7 @@ final class BookController extends AbstractController
                 continue;
             }
 
+            $book->setOwner($this->getUser()); // Asignamos el usuario logueado como dueño del libro
             $this->em->persist($book);
             $importedCount++;
         }
@@ -253,5 +255,24 @@ final class BookController extends AbstractController
         }
 
         return new JsonResponse($book->toArray());
+    }
+
+    // Webservices REST que permiten obtener los libros de un usuario concreto
+    #[Route('/api/me/books', name: 'app_my_books', methods: ['GET'])]
+    public function my_books(): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'No estás identificado'], 401);
+        }
+
+        $books = $this->em->getRepository(Book::class)->findBy(['owner' => $user]);
+        $data = [];
+
+        foreach ($books as $book) {
+            $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
+        }
+
+        return new JsonResponse($data);
     }
 }

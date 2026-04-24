@@ -52,11 +52,21 @@ Gracias a la configuración de redirecciones automáticas, ahora el flujo es má
 
 ---
 
-## 🎓 Conceptos Clave aprendidos
-- **Sesiones Persistentes**: Aunque React se recargue, la sesión se mantiene en el navegador.
-- **Redirecciones de Servidor**: Usando `default_target_path` en Symfony, podemos controlar a dónde va el usuario tras identificarse.
-- **Proxies de Desarrollo**: Fundamentales para saltarse problemas de CORS y compartir cookies entre puertos distintos.
-- **Componentes Reactivos**: La UI cambia automáticamente cuando el estado `user` se rellena.
+---
 
+## 🔒 Paso 3: Propiedad y Vistas Privadas
 
-¡Tu conexión entre Symfony y React ya es funcional! 🚀
+Ahora la aplicación es más inteligente y segura:
+
+### 1. Dueños de Libros
+Cada libro que se añade (o importa) queda vinculado al usuario que tiene la sesión iniciada. Esto se gestiona en el backend guardando el `owner_id` en la tabla de libros.
+
+### 2. Filtro "Mis Libros"
+En React, los usuarios logueados tienen un botón especial para alternar entre:
+- **Ver todo el catálogo**: Ver los libros de todo el mundo.
+- **Ver mis libros**: Llamada al endpoint `/api/me/books` que filtra solo los tuyos.
+
+### 3. Seguridad en la Interfaz
+Si no hay sesión iniciada, los componentes `BookAdd` y `BookImport` desaparecen de la pantalla para evitar errores y mejorar la experiencia.
+
+¡Tu catálogo ya es una plataforma multiusuario completa! 🚀
