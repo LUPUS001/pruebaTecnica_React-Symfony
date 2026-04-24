@@ -70,3 +70,32 @@ En React, los usuarios logueados tienen un botón especial para alternar entre:
 Si no hay sesión iniciada, los componentes `BookAdd` y `BookImport` desaparecen de la pantalla para evitar errores y mejorar la experiencia.
 
 ¡Tu catálogo ya es una plataforma multiusuario completa! 🚀
+
+---
+
+## 🔐 Paso 4: Edición y Seguridad Avanzada (CRUD Completo)
+
+Hemos completado el ciclo de vida de los libros añadiendo edición y asegurando que nadie pueda tocar lo que no es suyo.
+
+### 1. Control de Permisos en el Servidor
+No basta con ocultar botones en el frontend; el backend (`BookController.php`) ahora es el que manda:
+- **Borrado Protegido**: El endpoint `/book/delete/{isbn}` comprueba si el usuario logueado es el `owner`. Si no, devuelve un error **403 Forbidden**.
+- **Nuevo Endpoint de Edición**: Creado `/book/edit/{isbn}` que procesa cambios (título, autor, fotos...) solo si eres el dueño o administrador.
+
+> [!IMPORTANT]
+> **Permisos de Administrador**: Los usuarios con el rol `ROLE_ADMIN` tienen permisos "maestros". Pueden editar y borrar cualquier libro del catálogo, aunque no sean los propietarios originales.
+
+### 2. Edición Dinámica en React
+Para que la edición sea cómoda, hemos implementado:
+- **Botones Inteligentes**: `BookCard.jsx` compara el email del usuario con el campo `owner` del libro, o verifica si el usuario es administrador (`ROLE_ADMIN`). Si se cumple alguna, muestra los botones de **Editar** e **Eliminar**.
+- **Ventana de Edición (Modal)**: Un nuevo componente `BookEdit.jsx` que se abre sobre la pantalla, permitiendo corregir datos o añadir más imágenes sin perder tu posición en la lista.
+
+### 3. Flexibilidad en los Nombres
+Hemos actualizado la validación de la entidad `Book` para permitir **puntos** en el nombre del autor, facilitando la entrada de autores como "J.K. Rowling".
+
+---
+**Puntos clave aprendidos**:
+- Validar siempre la propiedad en el **Backend** (la seguridad "de verdad").
+- Usar estados en React para controlar ventanas modales (`editingBook`).
+- La importancia de devolver información de propiedad en los JSON (`owner` email).
+

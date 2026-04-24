@@ -285,6 +285,11 @@ class Book
             'description' => $this->getDescription(),
             'website' => $this->getWebsite(),
             'category' => $this->getCategory(),
+            
+            // Para que funcione la búsqueda, necesitamos que el owner sea un campo más del array, sin este campo no sabríamos a quien le pertenece el libro
+            'owner' => $this->getOwner() ? $this->getOwner()->getEmail() : null, // si hay owner, devuelve el email del owner, si no, devuelve null
+            // si el email del owner(el que viene en los datos del libro) es igual al email del usuario logueado, entonces mostramos el botón de editar y borrar
+            
             'total_images' => count($images),
             'images' => $images,
         ];

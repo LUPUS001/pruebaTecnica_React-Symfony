@@ -3,6 +3,7 @@ import BookList from "./components/BookList";
 import BookAdd from "./components/BookAdd";
 import BookHeader from "./components/BookHeader";
 import BookImport from "./components/BookImport";
+import BookEdit from "./components/BookEdit";
 import "./App.css";
 
 
@@ -13,7 +14,8 @@ function App() {
     const [allCategories, setAllCategories] = useState([]);
     const [allYears, setAllYears] = useState([]);
     const [viewMode, setViewMode] = useState("all"); // "all" o "mine"
-
+    const [editingBook, setEditingBook] = useState(null); // Libro que se está editando (le indica a React que abra el formulario para editar los datos del libro)
+    // guardamos el libro que se esta editando en el estado editingBook
 
     useEffect(() => {
         fetchAllBooks();
@@ -232,7 +234,22 @@ function App() {
                 books={books}
                 setSelectedBook={setSelectedBook}
                 setBooks={setBooks}
+                user={user} // pasamos el usuario a BookList para que le muestre los botones de editar y borrar si es el dueño o admin
+                onEdit={(book) => setEditingBook(book)} // pasamos la función onEdit a BookList para que pueda editar los libros
             ></BookList>
+
+            {/* Modal de edición */}
+            {editingBook && (
+                <BookEdit
+                    book={editingBook} // pasamos el libro que se está editando
+                    onCancel={() => setEditingBook(null)} // cancelamos la edición y cerramos el modal
+
+                    onUpdate={(updatedBook) => {
+                        setBooks(prev => prev.map(b => b.isbn === updatedBook.isbn ? updatedBook : b)); // actualizamos el libro antiguo por el nuevo
+                        setEditingBook(null); // cerramos el modal
+                    }}
+                />
+            )}
         </div>
     );
 }
