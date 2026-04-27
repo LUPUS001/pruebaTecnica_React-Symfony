@@ -221,5 +221,30 @@ Para que React pueda mostrar la foto de perfil en el header, el JSON de `/api/us
 - **Base de Datos**: Al añadir campos a una entidad, siempre hay que generar la migración (`make:migration`) y ejecutarla (`migrations:migrate`).
 - **Limpiar Caché**: A veces, tras cambiar la estructura del usuario en la sesión, conviene usar `php bin/console cache:clear`.
 
+---
 
+## 🎨 Paso 7: Rediseño de UI Limpio y Profesional
 
+Hemos actualizado los formularios de acceso para que tengan un aspecto moderno, limpio y profesional, sin necesidad de elementos distractores.
+
+### 1. Tipografía y Estructura (`base.html.twig`)
+En lugar de cargar fuentes externas, hemos optado por una **pila de fuentes del sistema** (System Font Stack). Esto garantiza que la aplicación cargue instantáneamente (0ms de latencia de red para la fuente) y se vea integrada con el sistema operativo del usuario. Además, hemos centrado todo el contenido en pantalla para que la experiencia sea cómoda tanto en PC como en móviles.
+
+### 2. Estética "Clean & Minimal" y CSS Externo
+En lugar de colores chillones y estilos incrustados, hemos optado por:
+- **Separación de responsabilidades**: Hemos movido todo el diseño a `public/css/auth.css`. Esto mejora el rendimiento (gracias a la caché del navegador) y mantiene el código Twig mucho más limpio.
+- **Colores sobrios**: Fondo gris muy claro (`#f8fafc`) y tarjetas blancas puras.
+- **Micro-interacciones**: Bordes que cambian de color suavemente al escribir y botones con transiciones profesionales.
+- **Jerarquía visual**: Títulos claros y campos con buen espaciado para evitar la fatiga visual.
+
+### 3. Redirecciones Inteligentes (Control de Sesión)
+Hemos hecho que el `LoginController` sea más "consciente" del estado del usuario:
+- **Evitar bucles innecesarios**: Hemos añadido una comprobación inicial: `if ($this->getUser())`. Si un usuario que ya tiene sesión abierta intenta entrar en `/login`, Symfony lo detecta y lo manda directamente al frontend de React. Esto evita que los usuarios vean el formulario de login una y otra vez si ya están dentro.
+- **Centralización de URLs**: Tanto el registro como el login utilizan ahora el parámetro `frontend_url` de `services.yaml`. Al usar `$this->getParameter('frontend_url')`, desacoplamos el código de las URLs físicas del servidor.
+
+Esto significa que si mañana cambias el puerto de tu frontend (por ejemplo, de 5173 a 3000), solo tendrás que tocar el archivo `.env` y toda la lógica de redirección de PHP se actualizará sola.
+
+**Puntos clave aprendidos**:
+- Menos es más: Un buen uso del espacio en blanco y una tipografía adecuada valen más que mil efectos.
+- La consistencia visual en los inputs y botones ayuda al usuario a entender la aplicación.
+- Centralizar las URLs de redirección es vital para que el proyecto sea escalable y fácil de desplegar.

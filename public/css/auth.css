@@ -1,0 +1,163 @@
+/* Estilos globales para las páginas de autenticación */
+body {
+    margin: 0;
+    /* Usamos una pila de fuentes del sistema: rápido, ligero y sin dependencias externas */
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    background-color: #f8fafc;
+    /* Fondo gris muy suave para dar un aire profesional */
+    color: #1e293b;
+    /* Color de texto gris oscuro (mejor contraste que el negro puro) */
+}
+
+/* Contenedor principal que centra el formulario en pantalla */
+.auth-body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    /* Ocupa el 100% de la altura de la ventana */
+    padding: 1.5rem;
+}
+
+/* La tarjeta blanca que contiene el formulario */
+.auth-card {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    /* Bordes redondeados modernos */
+    /* Sombra suave para dar profundidad (efecto de "flotar") */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #e2e8f0;
+    /* Borde muy sutil para delimitar la tarjeta */
+}
+
+.auth-card h2 {
+    margin-top: 0;
+    text-align: center;
+    font-size: 1.875rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: #0f172a;
+}
+
+.auth-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    /* Espacio uniforme entre campos */
+}
+
+/* Contenedor de cada etiqueta + input */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.auth-card label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* Estilos para los campos de texto */
+.auth-card input,
+.auth-card textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    width: 100%;
+    box-sizing: border-box;
+    /* Asegura que el padding no ensanche el input */
+    font-family: inherit;
+    font-size: 1rem;
+    transition: all 0.2s;
+    /* Animación suave al hacer foco */
+}
+
+/* Efecto cuando el usuario hace clic para escribir */
+.auth-card input:focus,
+.auth-card textarea:focus {
+    outline: none;
+    border-color: #6366f1;
+    /* Cambia a color índigo */
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    /* Resplandor suave alrededor */
+}
+
+/* Botón base para login/registro */
+.btn-auth {
+    width: 100%;
+    padding: 0.75rem;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: background-color 0.2s;
+}
+
+/* Color para el botón principal (Login) */
+.btn-primary {
+    background-color: #4f46e5;
+}
+
+.btn-primary:hover {
+    background-color: #4338ca;
+}
+
+/* Color para el botón secundario (Registro) */
+.btn-secondary {
+    background-color: #1e293b;
+}
+
+.btn-secondary:hover {
+    background-color: #0f172a;
+}
+
+/* Mensajes de error de Symfony */
+.error-message {
+    background-color: #fef2f2;
+    color: #991b1b;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    margin-bottom: 1rem;
+    border: 1px solid #fee2e2;
+    text-align: center;
+}
+
+/* Enlaces inferiores (Crear cuenta / Volver) */
+.links {
+    margin-top: 1.5rem;
+    text-align: center;
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.links a {
+    color: #4f46e5;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.links a:hover {
+    text-decoration: underline;
+}
+
+/* Personalización del input de archivo para la foto */
+.custom-file-upload input[type="file"] {
+    background: #f1f5f9;
+    padding: 0.5rem;
+    border: 1px dashed #cbd5e1;
+}
+
+.custom-file-upload small {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+    color: #94a3b8;
+}
