@@ -63,7 +63,7 @@ function BookImport({ onImportSuccess }) {
     };
 
     return (
-        <div className="book-import-container" style={{ display: 'inline-block', marginLeft: '10px' }}>
+        <div className="book-import-container">
             <input
                 type="file" // Tipo de input que permite subir archivos
                 accept=".json" // Solo permite archivos .json

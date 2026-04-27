@@ -248,3 +248,22 @@ Esto significa que si mañana cambias el puerto de tu frontend (por ejemplo, de 
 - Menos es más: Un buen uso del espacio en blanco y una tipografía adecuada valen más que mil efectos.
 - La consistencia visual en los inputs y botones ayuda al usuario a entender la aplicación.
 - Centralizar las URLs de redirección es vital para que el proyecto sea escalable y fácil de desplegar.
+
+## ⚛️ Paso 8: Refactorización de Estilos en React (Clean Code)
+
+Para que el frontend sea tan profesional como el backend, hemos eliminado todos los estilos "inline" (`style={{...}}`) de los componentes React y los hemos centralizado en `App.css`.
+
+### 1. Clases de Utilidad y Estados
+En lugar de definir colores y tamaños directamente en el JSX, ahora usamos clases reutilizables:
+- **`.error-text`**: Unifica el estilo de todos los mensajes de validación (rojo, pequeño, legible).
+- **`.input-readonly`**: Define un aspecto visual claro (gris suave) para campos que no se pueden editar, como el ISBN.
+- **Estados Dinámicos**: Para botones como "Mis Libros", usamos clases dinámicas (`.active`, `.inactive`) que cambian el diseño según el estado de React sin ensuciar la lógica del componente.
+
+### 2. Ventajas del Refactor
+- **Mantenibilidad**: Si mañana quieres cambiar el color de "error" de toda la app, solo tocas una línea en el CSS, no 10 componentes distintos.
+- **Legibilidad**: El código JSX queda mucho más limpio al quitarle bloques de objetos de estilo complejos.
+- **Separación de Responsabilidades**: El componente se encarga de la lógica; el CSS, del diseño.
+
+**Puntos clave aprendidos**:
+- NUNCA uses estilos inline en producción salvo para valores que se calculan en tiempo real (como la posición de un scroll).
+- Las clases CSS con nombres descriptivos (BEM o similar) hacen que el equipo trabaje mejor.

@@ -11,6 +11,7 @@ function BookEdit(props) {
     const [category, setCategory] = useState(book.category || "");
     const [pages, setPages] = useState(book.pages || "");
     const [published, setPublished] = useState(book.published || "");
+    const [description, setDescription] = useState(book.description || "");
     const [images, setImages] = useState([]);
     const [errors, setErrors] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -33,6 +34,7 @@ function BookEdit(props) {
         formData.append("category", category);
         formData.append("pages", pages);
         formData.append("published", published);
+        formData.append("description", description);
 
         // Añadimos las imágenes al FormData
         if (images && images.length > 0) {
@@ -66,14 +68,14 @@ function BookEdit(props) {
     };
 
     return (
-        <div>
-            <div>
+        <div className="book-edit-overlay">
+            <div className="book-edit-modal">
                 <h3>Editar libro: {book.title}</h3>
 
                 {errors.length > 0 && (
                     <ul className="error-messages">
                         {errors.map((error, index) => (
-                            <li key={index} style={{ color: "red", fontSize: "0.85em" }}>{error}</li>
+                            <li key={index} className="error-text">{error}</li>
                         ))}
                     </ul>
                 )}
@@ -89,7 +91,7 @@ function BookEdit(props) {
                     <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} required />
 
                     <label>ISBN (Identificador único):</label>
-                    <input type="text" value={isbn} readOnly style={{ backgroundColor: "#eee" }} />
+                    <input type="text" value={isbn} readOnly className="input-readonly" />
 
                     <label>Categoría:</label>
                     <input type="text" value={category} onChange={(e) => setCategory(e.target.value)} required />
@@ -100,14 +102,22 @@ function BookEdit(props) {
                     <label>Fecha de publicación:</label>
                     <input type="date" value={published} onChange={(e) => setPublished(e.target.value)} required />
 
+                    <label>Descripción (opcional):</label>
+                    <textarea 
+                        value={description} 
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Escribe una breve reseña..."
+                        className="description-input"
+                    ></textarea>
+
                     <label>Añadir más fotos (opcional):</label>
                     <input type="file" accept="image/*" multiple onChange={(e) => setImages(Array.from(e.target.files))} />
 
-                    <div>
-                        <button type="submit" disabled={isSubmitting}>
+                    <div className="modal-actions">
+                        <button type="submit" className="book-add-button" disabled={isSubmitting}>
                             {isSubmitting ? "Guardando..." : "Guardar Cambios"}
                         </button>
-                        <button type="button" onClick={onCancel}>
+                        <button type="button" onClick={onCancel} className="filter-button button-secondary">
                             Cancelar
                         </button>
                     </div>
