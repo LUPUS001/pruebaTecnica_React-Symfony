@@ -189,20 +189,21 @@ Hemos mejorado la entidad `User` para que los usuarios no sean solo un email, si
 ### 1. Mejoras en la Entidad y el Formulario
 
 - **Campos nuevos**: Añadimos `photo` (texto para la ruta) y `description` (texto largo) a `User.php`.
-- **UserType**: En el formulario de registro, el campo `photo` es de tipo `FileType`. No está "mapeado" directamente (`'mapped' => false`) porque no guardamos el archivo en la base de datos, sino su **ruta**.
+- **UserType**: En el formulario de registro, el campo `photo` es de tipo `FileType`. No está "mapeado" directamente (`'mapped' => false`) porque no guardamos el objeto del archivo en la base de datos, sino solo el **texto de su ruta**. Esto nos da control total sobre cómo y dónde guardar el archivo antes de persistir el usuario.
 - **Validación**: Hemos puesto restricciones para que las fotos no pesen más de 2MB y sean formatos válidos (JPG, PNG, WEBP).
 
 ### 2. Lógica de Subida (`UserController.php`)
 
-Cuando un usuario se registra con una foto, el servidor hace lo siguiente:
-1. Extrae el archivo del formulario.
-2. Genera un nombre único (para que dos fotos no choquen).
-3. Mueve el archivo a `public/uploads/profiles/`.
+Cuando un usuario se registra con una foto, el controlador intercepta el archivo antes de que Symfony intente guardarlo:
+1. Extrae el archivo del formulario usando `$registration_form->get('photo')->getData()`.
+2. Genera un nombre único con `uniqid()` y mantiene la extensión original.
+3. Mueve el archivo físicamente a `public/uploads/profiles/`.
 4. Guarda la **ruta pública** en la base de datos (ej: `/uploads/profiles/foto123.jpg`).
+5. **Redirección**: Al terminar, redirigimos al login (`app_login`) para que el usuario pueda estrenar su cuenta.
 
 ### 3. Compartiendo la Info con React (`AuthController.php`)
 
-Para que React pueda mostrar la foto de perfil arriba a la derecha, el JSON de `/api/user/status` ahora incluye estos campos:
+Para que React pueda mostrar la foto de perfil en el header, el JSON de `/api/user/status` ahora incluye el campo `photo`. Si el usuario no tiene foto, el campo será `null`.
 
 ```json
 {
@@ -215,9 +216,10 @@ Para que React pueda mostrar la foto de perfil arriba a la derecha, el JSON de `
 ```
 
 **Puntos clave aprendidos**:
-- `mapped => false` en formularios Symfony permite manejar archivos manualmente antes de guardar la entidad.
-- Las fotos nunca se guardan en la base de datos (sería muy ineficiente), solo se guarda la ruta al archivo.
-- Al actualizar la entidad `User`, a veces es necesario limpiar la caché de Symfony (`php bin/console cache:clear`) para que el sistema de seguridad reconozca los nuevos campos en la sesión.
+- `mapped => false` en formularios permite manejar datos que no van directos a una columna (como procesar una imagen antes de guardar su ruta).
+- **Serialización**: Hemos eliminado el método `__serialize` manual de la entidad `User`. En Symfony moderno, si no necesitas una lógica muy específica, es mejor dejar que el framework maneje la serialización de la sesión para evitar que el usuario se "desloguee" al cambiar campos de la entidad.
+- **Base de Datos**: Al añadir campos a una entidad, siempre hay que generar la migración (`make:migration`) y ejecutarla (`migrations:migrate`).
+- **Limpiar Caché**: A veces, tras cambiar la estructura del usuario en la sesión, conviene usar `php bin/console cache:clear`.
 
 
 
