@@ -25,7 +25,10 @@ Hemos creado una ruta especial (`/api/user/status`) que responde a React:
 Para que React se entere de lo que pasa en el servidor, hemos hecho dos cosas:
 
 ### 1. El Proxy (`vite.config.js`)
-Como React corre en el puerto `5173` y Symfony en el `8000`, el navegador los ve como mundos distintos. Hemos configurado un **Proxy** para que todas las peticiones que empiecen por `/api` se envíen automáticamente al servidor de Symfony, compartiendo las cookies de sesión.
+Como React corre en el puerto `5173` y Symfony en el `8000`, el navegador los ve como **dominios distintos** (aunque sean localhost). Esto provoca errores de **CORS** (*Cross-Origin Resource Sharing*): el navegador bloquea por seguridad las peticiones entre puertos diferentes.
+
+El **Proxy** de Vite resuelve esto: todas las peticiones que empiecen por `/api` se redirigen automáticamente al servidor de Symfony, compartiendo las cookies de sesión. El navegador cree que hay una sola origin y no bloquea nada.
+
 
 ### 2. Detección Automática (`App.jsx`)
 En el componente principal, usamos un `useEffect` para preguntar al servidor apenas carga la página:
@@ -98,4 +101,123 @@ Hemos actualizado la validación de la entidad `Book` para permitir **puntos** e
 - Validar siempre la propiedad en el **Backend** (la seguridad "de verdad").
 - Usar estados en React para controlar ventanas modales (`editingBook`).
 - La importancia de devolver información de propiedad en los JSON (`owner` email).
+
+---
+
+## ⚙️ Paso 5: Desacoplamiento de Entorno y Aislamiento de Sesión
+
+Antes de estos cambios, el código tenía **URLs y puertos grabados a fuego** en varios archivos. Si cambiabas el puerto, tenías que editar múltiples sitios. Además, todos los proyectos Symfony compartían la misma cookie de sesión (`PHPSESSID`), lo que causaba conflictos de login entre proyectos.
+
+> [!NOTE]
+> Al hacer un `checkout` a este commit, no notarás ningún cambio visual ni funcional en la aplicación. Este paso se centra exclusivamente en construir los **pilares de infraestructura** necesarios para que todo lo que viene después sea escalable y profesional.
+
+
+### 1. Variables de Entorno (`.env` y `frontend/.env`)
+
+Se centralizan las URLs en un único lugar:
+
+```env
+# .env (Symfony)
+FRONTEND_URL=http://localhost:5173
+
+# frontend/.env (Vite/React)
+VITE_BACKEND_URL=http://localhost:8000
+```
+
+Si cambias el puerto, solo editas estos archivos. El resto del código se adapta solo.
+
+### 2. Puente entre `.env` y los `.yaml` de Symfony (`services.yaml`)
+
+Los archivos `.yaml` de Symfony no pueden leer el `.env` directamente. `services.yaml` actúa de puente:
+
+```yaml
+parameters:
+    frontend_url: '%env(FRONTEND_URL)%'   # %env()% le dice a Symfony que lea del .env
+```
+
+### 3. Redirección Dinámica tras Login (`security.yaml`)
+
+```yaml
+# Antes (URL hardcodeada):
+default_target_path: 'http://localhost:5173'
+
+# Ahora (lee del .env a través de services.yaml):
+default_target_path: '%frontend_url%'
+```
+
+### 4. Proxy Dinámico en React (`vite.config.js`)
+
+El proxy de Vite redirige las peticiones `/api/*` al backend usando la variable de entorno en lugar de un puerto fijo.
+
+En React, las variables de entorno de Vite se usan así:
+
+```js
+import.meta.env.VITE_BACKEND_URL  // → "http://localhost:8000"
+
+// Ejemplo de uso en JSX:
+<a href={`${import.meta.env.VITE_BACKEND_URL}/logout`}>Cerrar sesión</a>
+// Resultado: <a href="http://localhost:8000/logout">Cerrar sesión</a>
+```
+
+> **Regla importante**: En Vite, todas las variables de entorno **deben empezar por `VITE_`** para ser accesibles en el código del navegador. Las que no tienen ese prefijo se ignoran por seguridad.
+
+### 5. Nombre Único de Sesión (`framework.yaml`)
+
+```yaml
+session:
+    # Sin esto, todos los proyectos Symfony del mismo PC usan la cookie "PHPSESSID"
+    # y el navegador mezcla las sesiones entre proyectos.
+    name: APP_SESSION_LIBRERIA
+
+    handler_id: null       # Usa el handler nativo de PHP (guarda en /var/lib/php/sessions del SO Linux)
+    cookie_secure: auto    # HTTPS en producción, HTTP en local automáticamente
+    cookie_samesite: lax   # Protección básica contra ataques CSRF
+```
+
+**Puntos clave aprendidos**:
+- Nunca escribas URLs o puertos directamente en el código. Usa variables de entorno.
+- En Symfony, la cadena de configuración es: `.env` → `services.yaml` (parámetros) → uso en `security.yaml`, etc.
+- En React/Vite, todas las variables deben empezar por `VITE_` y se acceden con `import.meta.env.VITE_NOMBRE`.
+- Un nombre de sesión único por proyecto evita que el navegador confunda las cookies entre proyectos.
+
+---
+
+## 👤 Paso 6: Perfil de Usuario (Foto y Descripción)
+
+Hemos mejorado la entidad `User` para que los usuarios no sean solo un email, sino que tengan una "identidad" dentro de la app.
+
+### 1. Mejoras en la Entidad y el Formulario
+
+- **Campos nuevos**: Añadimos `photo` (texto para la ruta) y `description` (texto largo) a `User.php`.
+- **UserType**: En el formulario de registro, el campo `photo` es de tipo `FileType`. No está "mapeado" directamente (`'mapped' => false`) porque no guardamos el archivo en la base de datos, sino su **ruta**.
+- **Validación**: Hemos puesto restricciones para que las fotos no pesen más de 2MB y sean formatos válidos (JPG, PNG, WEBP).
+
+### 2. Lógica de Subida (`UserController.php`)
+
+Cuando un usuario se registra con una foto, el servidor hace lo siguiente:
+1. Extrae el archivo del formulario.
+2. Genera un nombre único (para que dos fotos no choquen).
+3. Mueve el archivo a `public/uploads/profiles/`.
+4. Guarda la **ruta pública** en la base de datos (ej: `/uploads/profiles/foto123.jpg`).
+
+### 3. Compartiendo la Info con React (`AuthController.php`)
+
+Para que React pueda mostrar la foto de perfil arriba a la derecha, el JSON de `/api/user/status` ahora incluye estos campos:
+
+```json
+{
+  "user": {
+    "email": "antonio@a.com",
+    "photo": "/uploads/profiles/foto123.jpg",
+    "description": "Hola, soy Antonio"
+  }
+}
+```
+
+**Puntos clave aprendidos**:
+- `mapped => false` en formularios Symfony permite manejar archivos manualmente antes de guardar la entidad.
+- Las fotos nunca se guardan en la base de datos (sería muy ineficiente), solo se guarda la ruta al archivo.
+- Al actualizar la entidad `User`, a veces es necesario limpiar la caché de Symfony (`php bin/console cache:clear`) para que el sistema de seguridad reconozca los nuevos campos en la sesión.
+
+
 

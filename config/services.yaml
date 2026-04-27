@@ -7,6 +7,8 @@
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    frontend_url: '%env(FRONTEND_URL)%' # Redirige a FRONTEND_URL que hemos configurado en .env
+    # con %env()% le decimos a Symfony que busque la url en el archivo .env
 
 services:
     # default configuration for services in *this* file

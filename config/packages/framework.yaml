@@ -3,7 +3,20 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    # Esto es para que la sesión se mantenga entre peticiones y no se pierda al cambiar de página 
+    session:
+        # Nombre de la cookie de sesión (con varios proyectos Symfony abiertos, todos usarían la misma cookie (PHPSESSID) si no le ponemos un nombre distinto)
+        # si usan la misma cookie, no podríamos diferenciar las sesiones de cada proyecto y nos logueariamos en el proyecto equivocado
+        name: APP_SESSION_LIBRERIA 
+        
+        # aqui es donde se guardan las sesiones, null significa que usa /var/sessions o /var/lib/php/sessions (carpeta del SO Linux no del proyecto)
+        handler_id: null 
+        
+        # true = solo se envía por HTTPS, false = se envía por HTTP y HTTPS
+        cookie_secure: auto 
+        
+        # lax = se envía en peticiones del mismo sitio y en enlaces externos (sirve para proteger el sitio de ataques CSRF y que la sesión no se pierda al cambiar de página)
+        cookie_samesite: lax 
 
     #esi: true
     #fragments: true
