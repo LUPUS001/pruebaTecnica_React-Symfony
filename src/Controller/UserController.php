@@ -27,8 +27,21 @@ final class UserController extends AbstractController
         $registration_form->handleRequest($request);
         
         if ($registration_form->isSubmitted() && $registration_form->isValid()) { 
-            $contrasenaEnTextoPlano = $registration_form->get('password')->getData();
+            // Manejo de la foto de perfil
+            $photoFile = $registration_form->get('photo')->getData();
+            if ($photoFile) {
+                $destination = $this->getParameter('kernel.project_dir') . '/public/uploads/profiles';
+                $newFilename = uniqid() . '.' . $photoFile->guessExtension();
 
+                try {
+                    $photoFile->move($destination, $newFilename);
+                    $user->setPhoto('/uploads/profiles/' . $newFilename);
+                } catch (\Exception $e) {
+                    // Si falla la subida, simplemente no guardamos la foto
+                }
+            }
+
+            $contrasenaEnTextoPlano = $registration_form->get('password')->getData();
             $contrasenaHasheada = $passwordHasher->hashPassword(
                 $user,
                 $contrasenaEnTextoPlano
@@ -38,7 +51,7 @@ final class UserController extends AbstractController
         
             $this->em->persist($user);
             $this->em->flush();
-            return $this->redirectToRoute('user_registration');
+            return $this->redirectToRoute('app_login'); // Redirigimos al login tras el éxito
         };
         return $this->render('user/index.html.twig', [
             'registration_form' => $registration_form->createView(),

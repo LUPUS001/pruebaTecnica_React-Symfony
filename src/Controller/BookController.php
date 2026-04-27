@@ -363,4 +363,22 @@ final class BookController extends AbstractController
 
         return new JsonResponse($data);
     }
+
+    #[Route('/book/search/{query}', name: 'search_books', methods: ['GET'])]
+    public function search_books($query): JsonResponse
+    {
+        $books = $this->em->getRepository(Book::class)->createQueryBuilder('b')
+            ->where('b.title LIKE :query')
+            ->orWhere('b.author LIKE :query')
+            ->setParameter('query', '%' . $query . '%')
+            ->getQuery()
+            ->getResult();
+
+        $results = [];
+        foreach ($books as $book) {
+            $results[] = $book->toArray();
+        }
+
+        return new JsonResponse($results);
+    }
 }

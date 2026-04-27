@@ -5,6 +5,123 @@
         <title>{% block title %}Welcome!{% endblock %}</title>
         <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
         {% block stylesheets %}
+            <style>
+                .auth-body {
+                    background-color: #f0f2f5;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 100vh;
+                    margin: 0;
+                    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                }
+                .auth-card {
+                    background: white;
+                    padding: 2.5rem;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+                    width: 100%;
+                    max-width: 400px;
+                    border: 1px solid rgba(0,0,0,0.05);
+                }
+                .auth-card h2 {
+                    margin-top: 0;
+                    color: #1a1a1a;
+                    text-align: center;
+                    margin-bottom: 2rem;
+                    font-size: 1.75rem;
+                    font-weight: 700;
+                }
+                .auth-card form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.25rem;
+                }
+                .auth-card .form-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+                }
+                .auth-card label {
+                    color: #4a4a4a;
+                    font-size: 0.9rem;
+                    font-weight: 500;
+                }
+                .auth-card input, .auth-card select, textarea {
+                    padding: .75rem 1rem;
+                    border: 1px solid #dcdcdc;
+                    border-radius: 8px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    font-size: 1rem;
+                    transition: border-color 0.2s, box-shadow 0.2s;
+                }
+                .auth-card input:focus, textarea:focus {
+                    outline: none;
+                    border-color: #4a90e2;
+                    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+                }
+                .btn-auth {
+                    width: 100%;
+                    padding: .85rem;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    font-weight: 600;
+                    font-size: 1rem;
+                    margin-top: 0.5rem;
+                    transition: filter 0.2s, transform 0.1s;
+                }
+                .btn-auth:active {
+                    transform: scale(0.98);
+                }
+                .btn-primary { background: #2c3e50; }
+                .btn-primary:hover { filter: brightness(1.2); }
+                .btn-success { background: #27ae60; }
+                .btn-success:hover { filter: brightness(1.1); }
+                .btn-secondary { background: #8e44ad; }
+                .btn-secondary:hover { filter: brightness(1.1); }
+                
+                .auth-card .error-message {
+                    color: #c0392b;
+                    background: #fdf2f2;
+                    padding: 1rem;
+                    border-radius: 8px;
+                    margin-bottom: 1.5rem;
+                    font-size: .9rem;
+                    text-align: center;
+                    border: 1px solid #f9d6d6;
+                }
+                .auth-card .links {
+                    margin-top: 2rem;
+                    text-align: center;
+                    font-size: .95rem;
+                }
+                .auth-card .links a {
+                    color: #4a90e2;
+                    text-decoration: none;
+                    font-weight: 500;
+                }
+                .auth-card .links a:hover {
+                    text-decoration: underline;
+                }
+
+                .custom-file-upload {
+                    text-align: left;
+                    margin-bottom: 10px;
+                }
+                .custom-file-upload input[type="file"] {
+                    background: #f8f9fa;
+                    border: 2px dashed #ddd;
+                    padding: 15px;
+                }
+                .custom-file-upload small {
+                    display: block;
+                    margin-top: 8px;
+                    color: #888;
+                }
+            </style>
         {% endblock %}
 
         {% block javascripts %}

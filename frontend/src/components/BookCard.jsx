@@ -68,8 +68,8 @@ function BookCard(props) {
 
                 {/* Solo se muestran los botones de editar y eliminar si el usuario es el dueño del libro o es un administrador */}
                 {isOwner && (
-                    <div style={{ marginTop: "10px", display: "flex", gap: "5px" }}>
-                        <button onClick={handleEdit}>
+                    <div className="book-card-actions">
+                        <button className="book-card-edit-button" onClick={handleEdit}>
                             Editar
                         </button>
                         <button className="book-card-delete-button" onClick={handleDelete}>

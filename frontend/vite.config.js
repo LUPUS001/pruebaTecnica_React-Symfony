@@ -1,23 +1,21 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react-swc'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    // El proxy es esencial por dos motivos:
-    // 1. Evita problemas de CORS *1(Cross-Origin Resource Sharing) al unificar React (5173) y Symfony (8000) bajo el mismo origen.
-    // 2. Permite que las Cookies de la sesión de Symfony se envíen automáticamente en cada petición.
-    proxy: {
-      // Redirigimos las rutas de libros y recursos estáticos al backend:
-      '/book': { target: 'http://localhost:8000', changeOrigin: true },
-      '/books': { target: 'http://localhost:8000', changeOrigin: true },
-      '/images': { target: 'http://localhost:8000', changeOrigin: true },
+export default defineConfig(({ mode }) => {
+  // Cargamos las variables de entorno del directorio actual
+  const env = loadEnv(mode, process.cwd(), '');
+  const backendUrl = env.VITE_BACKEND_URL || 'http://localhost:8000';
 
-      // Todas las rutas de autenticación y datos de usuario:
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
+  return {
+    plugins: [react()],
+    server: {
+      proxy: {
+        '/book': { target: backendUrl, changeOrigin: true },
+        '/books': { target: backendUrl, changeOrigin: true },
+        '/images': { target: backendUrl, changeOrigin: true },
+        '/uploads': { target: backendUrl, changeOrigin: true },
+        '/api': { target: backendUrl, changeOrigin: true }
       }
     }
   }

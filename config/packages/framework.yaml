@@ -3,7 +3,12 @@ framework:
     secret: '%env(APP_SECRET)%'
 
     # Note that the session will be started ONLY if you read or write from it.
-    session: true
+    # Esto es para que la sesión se mantenga entre peticiones y no se pierda al cambiar de página 
+    session:
+        name: APP_SESSION_LIBRERIA # Nombre de la cookie de sesión
+        handler_id: null # null = se guarda en el servidor 
+        cookie_secure: auto # true = solo se envía por HTTPS, false = se envía por HTTP y HTTPS
+        cookie_samesite: lax # lax = se envía en peticiones del mismo sitio y en enlaces externos
 
     #esi: true
     #fragments: true

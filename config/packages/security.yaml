@@ -26,7 +26,7 @@ security:
                 enable_csrf: true # Habilita el CSRF (Cross-Site Request Forgery)
                 
                 # A donde va el usuario despues de iniciar sesion (cuando el login sea correcto, lo mandamos al frontend de React)
-                default_target_path: http://localhost:5173/
+                default_target_path: '%frontend_url%'
                 always_use_default_target_path: true # Redirige siempre a React después de iniciar sesión
             
             # Login con JSON (para peticiones AJAX con las que enviamos el email y la contraseña en formato JSON)

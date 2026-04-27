@@ -10,6 +10,7 @@ function BookAdd(props) {
     const [isbn, setIsbn] = useState("");
     const [category, setCategory] = useState(""); // Renombrado de genre para coincidir con backend
     const [pages, setPages] = useState("");
+    const [description, setDescription] = useState(""); // Nueva descripción opcional
 
     // Usamos la fecha actual como valor por defecto 
     const today = new Date().toISOString().split('T')[0];
@@ -55,6 +56,7 @@ function BookAdd(props) {
         formData.append("category", category); // Usamos el nuevo estado category
         formData.append("pages", pages);
         formData.append("published", published);
+        formData.append("description", description);
 
         // Añadimos todas las imágenes seleccionadas al FormData
         // El nombre debe terminar en [] para que PHP lo reciba como un array
@@ -82,6 +84,7 @@ function BookAdd(props) {
                 setIsbn("");
                 setCategory("");
                 setPages("");
+                setDescription("");
                 setPublished(today);
                 setImages([]); // Limpiamos las imágenes para que no se muestren en el siguiente renderizado 
                 e.target.reset(); // Limpiamos el formulario
@@ -176,6 +179,15 @@ function BookAdd(props) {
                     required
                     disabled={isSubmitting}
                 />
+                
+                <textarea
+                    name="description"
+                    placeholder="Descripción del libro (opcional)..."
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    disabled={isSubmitting}
+                    className="description-input"
+                ></textarea>
 
                 {/* Campo para la fecha de publicación del libro */}
                 <div className="file-input-container">

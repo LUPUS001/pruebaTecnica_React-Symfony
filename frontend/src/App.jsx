@@ -14,7 +14,8 @@ function App() {
     const [allCategories, setAllCategories] = useState([]);
     const [allYears, setAllYears] = useState([]);
     const [viewMode, setViewMode] = useState("all"); // "all" o "mine"
-    const [editingBook, setEditingBook] = useState(null); // Libro que se está editando (le indica a React que abra el formulario para editar los datos del libro)
+    const [editingBook, setEditingBook] = useState(null); // Libro que se está editando
+    const [searchQuery, setSearchQuery] = useState(""); // Estado para el buscador (le indica a React que abra el formulario para editar los datos del libro)
     // guardamos el libro que se esta editando en el estado editingBook
 
     useEffect(() => {
@@ -153,17 +154,45 @@ function App() {
         }
     };
 
+    const handleSearch = async (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (query.trim() === "") {
+            fetchAllBooks();
+            return;
+        }
+
+        try {
+            const response = await fetch(`/book/search/${query}`);
+            if (response.ok) {
+                const data = await response.json();
+                setBooks(data);
+                setViewMode("all");
+            }
+        } catch (error) {
+            console.error("Error en la búsqueda:", error);
+        }
+    };
+
     return (
         <div className="app-container">
             <header style={{ padding: '10px', background: '#f8f9fa', borderBottom: '1px solid #ddd', marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
                 <h1>Catálogo de Libros</h1>
                 {user ? ( // Si el usuario está logueado, mostramos su email y un botón para cerrar sesión
-                    <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        {user.photo && (
+                            <img 
+                                src={user.photo} 
+                                alt="Profile" 
+                                style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ddd' }} 
+                            />
+                        )}
                         <span>Hola, <strong>{user.email}</strong></span>
-                        <a href="http://localhost:8000/logout" style={{ marginLeft: '15px', color: 'red' }}>Cerrar sesión</a>
+                        <a href={`${import.meta.env.VITE_BACKEND_URL}/logout`} style={{ marginLeft: '15px', color: 'red', textDecoration: 'none', fontWeight: 'bold' }}>Cerrar sesión</a>
                     </div>
                 ) : ( // Si el usuario no está logueado, mostramos un enlace para iniciar sesión
-                    <a href="http://localhost:8000/login">Iniciar sesión</a>
+                    <a href={`${import.meta.env.VITE_BACKEND_URL}/login`}>Iniciar sesión</a>
                 )}
 
             </header>
@@ -171,58 +200,48 @@ function App() {
             <BookHeader selectedBook={selectedBook} />
 
 
-            {/* Botones para filtrar el catálogo */}
-            <section>
-                <h4>Filtrar catálogo:</h4>
-                <button onClick={fetchAllBooks} className="filter-button">
+            <section className="toolbar">
+                <input
+                    type="text"
+                    placeholder="Buscar por título o autor..."
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    className="search-input"
+                />
+
+                <button onClick={fetchAllBooks} className="filter-button secondary">
                     Todos los libros
                 </button>
-                <button onClick={handleFilterByYear} className="filter-button">
-                    Filtrar por año
-                </button>
-                <button onClick={handleFilterByCategory} className="filter-button">
-                    Filtrar por categoría
-                </button>
 
-                {/* Botón para importar JSON - SOLO PARA LOGUEADOS */}
-                {user && <BookImport onImportSuccess={viewMode === "all" ? fetchAllBooks : fetchMyBooks} />}
+                <select onChange={handleCategoryChange} className="filter-select">
+                    <option value="all">Todas las categorías</option>
+                    {allCategories.map((cat) => (
+                        <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                </select>
 
-                {/* Botón para ver mis libros - SOLO PARA LOGUEADOS */}
+                <select onChange={handleYearChange} className="year-select">
+                    <option value="all">Todos los años</option>
+                    {allYears.map((yearSelected) => (
+                        <option key={yearSelected} value={yearSelected}>{yearSelected}</option>
+                    ))}
+                </select>
+
                 {user && (
-                    <button
-                        onClick={viewMode === "all" ? fetchMyBooks : fetchAllBooks}
-                        className="filter-button"
-                        style={{ backgroundColor: viewMode === "mine" ? "#007bff" : "#6c757d", color: "white" }}
-                    >
-                        {viewMode === "all" ? "Ver mis libros" : "Ver todo el catálogo"}
-                    </button>
+                    <div className="toolbar-user-actions">
+                        <BookImport onImportSuccess={viewMode === "all" ? fetchAllBooks : fetchMyBooks} />
+                        <button
+                            onClick={viewMode === "all" ? fetchMyBooks : fetchAllBooks}
+                            className="view-mode-button"
+                            style={{ backgroundColor: viewMode === "mine" ? "#3498db" : "#6c757d" }}
+                        >
+                            {viewMode === "all" ? "Mis Libros" : "Catálogo Global"}
+                        </button>
+                    </div>
                 )}
             </section>
 
-
-            {/* Menú de Categorías */}
-            <select onChange={handleCategoryChange} className="filter-select">
-                <option value="all">Todas las categorías</option>
-
-                {/* Recorremos todas las categorías y creamos un option para cada una */}
-                {allCategories.map((cat) => (
-                    <option key={cat} value={cat}>
-                        {cat}
-                    </option>
-                ))}
-            </select>
-
-            {/* Menú de Años */}
-            <select onChange={handleYearChange} className="year-select">
-                <option value="all">Todos los años</option>
-
-                {/* Recorremos todos los años y creamos un option para cada uno */}
-                {allYears.map((yearSelected) => (
-                    <option key={yearSelected} value={yearSelected}>
-                        {yearSelected}
-                    </option>
-                ))}
-            </select>
+            {/* Los selectores ahora están dentro del toolbar de arriba */}
 
             {/* Formulario para agregar un nuevo libro - SOLO PARA LOGUEADOS */}
             {user && <BookAdd setBooks={viewMode === "all" ? setBooks : fetchMyBooks}></BookAdd>}

@@ -14,7 +14,7 @@ final class LoginController extends AbstractController
     {
         // Si el usuario ya tiene sesión abierta, lo redirige directamente de vuelta a React en lugar de mostrarle el formulario otra vez.
         if ($this->getUser()) { 
-            return $this->redirect('http://localhost:5173/');
+            return $this->redirect($this->getParameter('frontend_url'));
         }
 
         // aquí guardaremos el error que haya ocurrido mientras se intentaba iniciar de sesion (Usuario no encontrado, contraseña incorrecta...)

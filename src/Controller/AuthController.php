@@ -25,6 +25,7 @@ final class AuthController extends AbstractController
             'user' => [ // Objeto con la información del usuario
                 'email' => $user->getUserIdentifier(), // Obtenemos el email del usuario
                 'roles' => $user->getRoles(), // Obtenemos los roles del usuario (ROLE_ADMIN o ROLE_USER)
+                'photo' => $user->getPhoto(), // Obtenemos la ruta de la foto de perfil
             ]
         ]);
     }
@@ -32,7 +33,7 @@ final class AuthController extends AbstractController
     #[Route('/logout-success', name: 'logout_success')]
     public function logoutSuccess(): Response
     {
-        return $this->redirect('http://localhost:5173/'); // Redirigimos al usuario a la página de inicio de React cuando cierre sesión
+        return $this->redirect($this->getParameter('frontend_url')); // Redirigimos al usuario a la página de inicio de React cuando cierre sesión
     }
 }
 

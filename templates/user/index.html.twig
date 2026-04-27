@@ -1,7 +1,27 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Hello UserController!{% endblock %}
-
 {% block body %}
-    {{ form(registration_form) }}
+    <div class="auth-body">
+        <div class="auth-card">
+            <h2>Registro</h2>
+            {{ form_start(registration_form) }}
+                {{ form_errors(registration_form) }}
+                {{ form_row(registration_form.email, {'attr': {'placeholder': 'tu@email.com'}}) }}
+                {{ form_row(registration_form.password, {'attr': {'placeholder': 'Contraseña segura'}}) }}
+                {{ form_row(registration_form.description, {'attr': {'placeholder': 'Cuéntanos algo sobre ti...'}}) }}
+                
+                <div class="form-group custom-file-upload">
+                    {{ form_label(registration_form.photo) }}
+                    {{ form_widget(registration_form.photo) }}
+                    <small>Sube una imagen JPG, JPEG, PNG o WEBP (máx. 2MB)</small>
+                </div>
+
+                <button type="submit" class="btn-auth btn-secondary">Crear cuenta</button>
+            {{ form_end(registration_form) }}
+            
+            <div class="links">
+                <a href="{{ path('app_login') }}">¿Ya tienes cuenta? Entrar</a>
+            </div>
+        </div>
+    </div>
 {% endblock %}
