@@ -18,6 +18,10 @@ class Book
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+    
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $owner = null;
 
     #[ORM\Column(length: 255, unique: true)]
     #[Assert\NotBlank(message: 'El ISBN es obligatorio.')]
@@ -36,8 +40,8 @@ class Book
     #[ORM\Column(length: 255)]
     #[Assert\NotBlank(message: 'El autor es obligatorio.')]
     #[Assert\Regex(
-        pattern: '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/u',
-        message: 'El autor solo puede contener letras y espacios.'
+        pattern: '/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s\.]+$/u',
+        message: 'El autor solo puede contener letras, espacios y puntos.'
     )]
     private string $author;
 
@@ -247,6 +251,18 @@ class Book
         return $this;
     }
 
+    public function getOwner(): ?User
+    {
+        return $this->owner;
+    }
+
+    public function setOwner(?User $owner): static
+    {
+        $this->owner = $owner;
+
+        return $this;
+    }
+
     public function toArray(): array
     {
         $images = [];
@@ -269,6 +285,11 @@ class Book
             'description' => $this->getDescription(),
             'website' => $this->getWebsite(),
             'category' => $this->getCategory(),
+            
+            // Para que funcione la búsqueda, necesitamos que el owner sea un campo más del array, sin este campo no sabríamos a quien le pertenece el libro
+            'owner' => $this->getOwner() ? $this->getOwner()->getEmail() : null, // si hay owner, devuelve el email del owner, si no, devuelve null
+            // si el email del owner(el que viene en los datos del libro) es igual al email del usuario logueado, entonces mostramos el botón de editar y borrar
+            
             'total_images' => count($images),
             'images' => $images,
         ];

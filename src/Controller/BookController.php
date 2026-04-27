@@ -74,6 +74,7 @@ final class BookController extends AbstractController
                 $book->setCategory(ucfirst(strtolower($book->getCategory()))); // Convierte la categoría a "Ficción" (primera letra mayúscula y el resto minúsculas)
             }
 
+            $book->setOwner($this->getUser()); // Asignamos el usuario logueado como dueño del libro
             $this->em->persist($book); // Guardamos el libro en la base de datos
 
 
@@ -125,6 +126,11 @@ final class BookController extends AbstractController
             return new JsonResponse(['error' => 'Libro no encontrado'], 404);
         }
 
+        // Seguridad: Solo el dueño o un ADMIN puede borrar el libro
+        if ($bookDelete->getOwner() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) {
+            return new JsonResponse(['error' => 'No tienes permiso para borrar este libro'], 403);
+        }
+
         // Primero eliminamos las imágenes asociadas para evitar el error de clave foránea y liberar espacio en disco
         foreach ($bookDelete->getImages() as $image) {
             $filePath = $this->getParameter('kernel.project_dir') . '/public' . $image->getRutaArchivo();
@@ -140,6 +146,89 @@ final class BookController extends AbstractController
         $this->em->flush();
 
         return new JsonResponse(['Libro borrado con éxito' => true, 'Titulo' => $title]);
+    }
+
+    #[Route('/book/edit/{isbn}', name: 'edit_book', methods: ['POST'])] // usamos POST porque vamos a modificar el libro
+    public function edit_book(Request $request, $isbn): Response { 
+        /*
+           $request -> contiene los datos enviados por el formulario (su titulo, autor...)
+           $isbn -> contiene el isbn del libro que se quiere editar
+        */
+        
+        $book = $this->em->getRepository(Book::class)->findOneBy(['isbn' => $isbn]); // Buscamos el libro por su isbn
+
+        if (!$book) { // Si no existe el libro
+            return new JsonResponse(['error' => 'Libro no encontrado'], 404);
+        }
+
+        // Seguridad: Solo el dueño o un ADMIN puede editar el libro
+        if ($book->getOwner() !== $this->getUser() && !$this->isGranted('ROLE_ADMIN')) { // Si el dueño del libro no es el usuario logueado y no es admin
+            return new JsonResponse(['error' => 'No tienes permiso para editar este libro'], 403);
+        }
+
+        
+        /* MINI REPASO */
+        // Creamos el formulario y le pasamos el libro que queremos editar
+        $form = $this->createForm(BookType::class, $book);
+        /*
+            BookType::class: Es el "mapa" o las reglas (qué campos existen, cuáles son obligatorios, qué validaciones tienen).
+            $book: Es el libro real que acabamos de sacar de la base de datos. Por lo tanto, el formulario ya viene "relleno" con los datos del libro.
+
+            Lo que ocurre: Al pasarle $book como segundo argumento, el formulario se precarga con los datos de ese libro. Es como poner el libro dentro 
+            de un molde. A partir de ahora, todo lo que le pase al formulario le pasará automáticamente al objeto $book.
+        */
+
+        // Procesamos los datos enviados (mismo formato que add_book)
+        $form->submit(array_merge($request->request->all(), $request->files->all()), false); // false para permitir actualizaciones parciales
+        /**
+         * array_merge($request->request->all(), $request->files->all()): Aqui unificamos la información
+         * Une los datos enviados por el formulario (request->all()) con las imágenes subidas (request->files->all()).
+         * 
+         * false: Indica que no queremos validar los datos del formulario, es decir, que solo queremos sobreescribir lo que editemos, si fuera
+         * true, borraría todo el libro y lo volvería a crear con los datos que le pasemos.
+        **/
+
+        // Gracias a estas 2 líneas editando el libro, no tienes que hacer if ($nuevoTitulo) $book->setTitle($nuevoTitulo); para cada uno de los 10 o 12 campos 
+        // que tiene tu entidad. Symfony lo hace por ti comparando el paquete con el objeto.
+
+
+
+        if ($form->isValid()) {
+            // Normalización de categoría (primera letra mayúscula y el resto minúsculas)
+            if ($book->getCategory()) {
+                $book->setCategory(ucfirst(strtolower($book->getCategory())));
+            }
+
+            // Manejo de nuevas imágenes (si el usuario sube nuevas imágenes, se guardan)
+            $uploadedFiles = $form->get('image')->getData(); // getData() obtiene los datos del formulario (en este caso, las imágenes subidas)
+
+            // Si el usuario sube nuevas imágenes
+            if ($uploadedFiles) { 
+                // guarda la imagen físicamente en la carpeta /public/images y crea una nueva entidad Image en la base de datos (vinculada al libro)
+                $destination = $this->getParameter('kernel.project_dir') . '/public/images';
+                foreach ($uploadedFiles as $uploadedFile) {
+                    // Generamos un nombre único para cada imagen para evitar que choquen, ya que al subir una imagen esta "hereda como nombre" 
+                    // el isbn del libro, si hay varias imágenes necesitamos el uniqid para que no tengan el mismo nombre y no se sobrescriban entre sí
+                    $newFilename = ($book->getIsbn() ?: uniqid()) . '-' . uniqid() . '.' . $uploadedFile->guessExtension();
+                    $uploadedFile->move($destination, $newFilename);
+                    
+                    $image = new Image();
+                    $image->setRutaArchivo('/images/' . $newFilename); // Guardamos la ruta de la imagen 
+                    $image->setBook($book); // Asociamos la imagen al libro
+                    $this->em->persist($image);
+                }
+            }
+
+            $this->em->flush();
+            return new JsonResponse($book->toArray());
+        }
+
+        $errors = []; // Array para guardar los errores
+        foreach ($form->getErrors(true) as $error) { // Recorremos todos los errores del formulario
+            $errors[] = $error->getMessage(); // Guardamos el mensaje de error en el array $errors
+        }
+
+        return new JsonResponse(['errors' => $errors], 400); // Devolvemos el array de errores en formato JSON
     }
 
 
@@ -211,6 +300,7 @@ final class BookController extends AbstractController
                 continue;
             }
 
+            $book->setOwner($this->getUser()); // Asignamos el usuario logueado como dueño del libro
             $this->em->persist($book);
             $importedCount++;
         }
@@ -268,5 +358,42 @@ final class BookController extends AbstractController
         }
 
         return new JsonResponse($book->toArray());
+    }
+
+    // Webservices REST que permiten obtener los libros de un usuario concreto
+    #[Route('/api/me/books', name: 'app_my_books', methods: ['GET'])]
+    public function my_books(): Response
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return new JsonResponse(['error' => 'No estás identificado'], 401);
+        }
+
+        $books = $this->em->getRepository(Book::class)->findBy(['owner' => $user]);
+        $data = [];
+
+        foreach ($books as $book) {
+            $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
+        }
+
+        return new JsonResponse($data);
+    }
+
+    #[Route('/book/search/{query}', name: 'search_books', methods: ['GET'])]
+    public function search_books($query): JsonResponse
+    {
+        $books = $this->em->getRepository(Book::class)->createQueryBuilder('b')
+            ->where('b.title LIKE :query')
+            ->orWhere('b.author LIKE :query')
+            ->setParameter('query', '%' . $query . '%')
+            ->getQuery()
+            ->getResult();
+
+        $results = [];
+        foreach ($books as $book) {
+            $results[] = $book->toArray();
+        }
+
+        return new JsonResponse($results);
     }
 }

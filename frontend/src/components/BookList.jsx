@@ -1,7 +1,7 @@
 import BookCard from "./BookCard";
 
 function BookList(props) {
-    const { books, setSelectedBook, setBooks } = props;
+    const { books, setSelectedBook, setBooks, user, onEdit } = props;
 
     const bookCard = books.map((book, index) => {
         return (
@@ -10,6 +10,8 @@ function BookList(props) {
                 book={book}
                 setSelectedBook={setSelectedBook}
                 setBooks={setBooks}
+                user={user} // La información de quién esta logueado
+                onEdit={onEdit} // La función que permite editar el libro, la que abre el modal/formulario de edición
             ></BookCard>
         );
     });
@@ -18,3 +20,5 @@ function BookList(props) {
 }
 
 export default BookList;
+
+// BookList sigue siendo el intermediario, el puente que le entrega a BookCard las herramientas que necesita
