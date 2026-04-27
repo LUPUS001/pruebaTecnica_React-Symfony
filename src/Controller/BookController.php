@@ -363,4 +363,30 @@ final class BookController extends AbstractController
 
         return new JsonResponse($data);
     }
+
+    #[Route('/book/search/{query}', name: 'search_books', methods: ['GET'])] 
+    // cuando el front pida algo que empiece por /book/search/ (ej: /book/search/Berserk) 
+    // se ejecutará este método y la variable $query será 'Berserk' 
+    public function search_books($query): JsonResponse
+    {
+        // Usamos Query Builder no tener que escribir SQL a mano
+        $books = $this->em->getRepository(Book::class)->createQueryBuilder('b') // 'b' es un alias para la tabla de libros "Book"
+
+            ->where('b.title LIKE :query') // Buscamos por título
+            ->orWhere('b.author LIKE :query') // O por autor
+            
+            // Añadimos '%' para que busque en cualquier parte del título o autor (con que empiece, termine o contenga la palabra o letra)
+            ->setParameter('query', '%' . $query . '%') 
+             
+            ->getQuery() // Enviamos la consulta que hemos creado a la base de datos
+            ->getResult(); // Obtenemos el resultado
+
+        $results = []; // Array donde guardaremos los resultados (los libros encontrados)
+
+        foreach ($books as $book) { // Recorremos todos los libros
+            $results[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $results
+        }
+
+        return new JsonResponse($results); // Devolvemos el array de libros en formato JSON
+    }
 }

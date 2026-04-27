@@ -575,6 +575,7 @@ section {
     cursor: not-allowed;
     /* El cursor cambia a "no permitido" */
 }
+
 /* Estilos dinámicos del Header y Usuario */
 .app-top-bar {
     padding: 10px 20px;
@@ -598,7 +599,7 @@ section {
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .logout-link {
@@ -626,9 +627,7 @@ section {
     text-decoration: underline;
 }
 
-/* --- UTILITIES & STATE CLASSES (Added in Commit 4) --- */
 
-/* Texto de error pequeño y rojo */
 .error-text {
     color: #e74c3c;
     font-size: 0.85em;
@@ -654,11 +653,13 @@ section {
 
 /* Estados dinámicos para el botón de cambio de vista (Mis Libros / Catálogo) */
 .view-mode-button.active {
-    background-color: #3498db; /* Azul para el modo activo */
+    background-color: #3498db;
+    /* Azul para el modo activo */
 }
 
 .view-mode-button.inactive {
-    background-color: #6c757d; /* Gris para el modo inactivo */
+    background-color: #6c757d;
+    /* Gris para el modo inactivo */
 }
 
 .view-mode-button:hover {
