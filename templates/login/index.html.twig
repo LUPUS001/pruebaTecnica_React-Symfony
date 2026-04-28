@@ -9,7 +9,10 @@
                     <a href="{{ path('app_logout') }}">Cerrar sesión</a>
                 </div>
             {% else %}
-                <h2>Entrar</h2>
+                <div class="auth-header">
+                    <h2>Entrar</h2>
+                    <p>Accede a tu biblioteca personal</p>
+                </div>
                 
                 <form method="post"> <!-- Método post para enviar los datos del formulario de forma segura -->
                     {% if error %}

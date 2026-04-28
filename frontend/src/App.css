@@ -621,3 +621,20 @@ section {
     opacity: 0.4;
     cursor: not-allowed;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap');
+
+.login-link {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    color: #4a90e2;
+    text-decoration: none;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+    margin-left: 15px;
+}
+
+.login-link:hover {
+    color: #2980b9;
+    text-decoration: underline;
+}

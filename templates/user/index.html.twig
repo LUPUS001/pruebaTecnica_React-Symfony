@@ -3,7 +3,10 @@
 {% block body %}
     <div class="auth-body">
         <div class="auth-card">
-            <h2>Registro</h2>
+            <div class="auth-header">
+                <h2>Crear Cuenta</h2>
+                <p>Únete a nuestra biblioteca personal</p>
+            </div>
             {{ form_start(registration_form) }}
                 {{ form_errors(registration_form) }}
                 {{ form_row(registration_form.email, {'attr': {'placeholder': 'tu@email.com'}}) }}

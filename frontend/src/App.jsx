@@ -187,7 +187,7 @@ function App() {
                         <a href={`${import.meta.env.VITE_BACKEND_URL}/logout`} style={{ marginLeft: '15px', color: 'red', textDecoration: 'none', fontWeight: 'bold' }}>Cerrar sesión</a>
                     </div>
                 ) : ( // Si el usuario no está logueado, mostramos un enlace para iniciar sesión
-                    <a href={`${import.meta.env.VITE_BACKEND_URL}/login`}>Iniciar sesión</a>
+                    <a href={`${import.meta.env.VITE_BACKEND_URL}/login`} className="login-link">Iniciar sesión</a>
                 )}
 
             </header>
