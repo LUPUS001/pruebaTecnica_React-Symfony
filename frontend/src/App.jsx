@@ -202,7 +202,19 @@ function App() {
 
             </header>
 
-            <BookHeader selectedBook={selectedBook} />
+
+            {/* Si selectedBook es null, mostramos la lista de libros. Si no, mostramos el header con la información del libro seleccionado */}
+            {/* Usamos selectedBook como condicion para mostrar el header o la lista de libros */}
+            {/* onBack es una prop que le pasamos a BookHeader para que pueda volver a la lista de libros */}
+            {/* 
+            selectedBook = null
+            -> Muestra la lista de libros
+            
+            selectedBook = {libro}
+            -> Muestra el header con la información del libro seleccionado
+            */}
+
+            <BookHeader selectedBook={selectedBook} onBack={() => setSelectedBook(null)} />
 
 
             <section className="toolbar">

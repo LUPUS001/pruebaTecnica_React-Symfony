@@ -287,4 +287,25 @@ Este flujo de trabajo basado en **Commits Atómicos** y **Documentación Paso a 
 2.  El historial sea legible (Git History).
 3.  Cualquier nuevo desarrollador pueda entender qué se hizo simplemente leyendo el `tutorial_repaso.md`.
 
-**¡Felicidades!** Has convertido una aplicación "que funciona" en un proyecto **profesional y mantenible**.
+---
+
+## 🔗 Paso 10: Funcionalidad de Compartir y APIs Nativas (Web Share API)
+
+Para mejorar la fluidez de navegación y la interacción del usuario con los libros del catálogo, hemos implementado una funcionalidad de "Compartir" utilizando APIs nativas del navegador.
+
+### 1. Web Share API (`navigator.share`)
+Hemos introducido el uso de `navigator.share()`, que invoca el menú de compartir nativo del dispositivo del usuario (muy útil especialmente en dispositivos móviles como Android o iOS).
+- Le pasamos un objeto con el **título**, el **texto** y opcionalmente la **URL** de la web oficial del libro si la tiene registrada en la base de datos.
+
+### 2. Fallbacks (Plan de Respaldo)
+Puesto que `navigator.share` no está soportado en todos los entornos (por ejemplo, en la mayoría de navegadores de escritorio en Linux), hemos implementado un comportamiento condicional (`if/else`):
+- Si la API no está disponible, el sistema utiliza la API del portapapeles (`navigator.clipboard.writeText()`) para copiar la información del libro automáticamente y muestra un `alert()` para confirmar la acción al usuario.
+
+### 3. Evitando compartir el Localhost
+Nos dimos cuenta de que **no tiene sentido compartir un enlace a `localhost`**, ya que nadie externo a tu red podrá abrirlo. Por lo tanto, hemos optimizado el código para que el enlace a compartir sea dinámico: si el libro tiene un `website` oficial, se comparte ese enlace; si no, solo se comparte el título y el autor limpios.
+
+**Puntos clave aprendidos**:
+- Manejar la compatibilidad de APIs modernas del navegador usando condicionales (`if (navigator.share)`).
+- Definir planes de contingencia (*fallbacks*) para que la aplicación nunca falle silenciosamente.
+- Pensar desde la perspectiva del usuario final (UX) a la hora de decidir qué datos es útil compartir.
+
