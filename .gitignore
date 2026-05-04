@@ -4,8 +4,7 @@
 /.env.*.local
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
-# luego descomenta el /public/images
-# /public/images/
+/public/images/
 /var/
 /vendor/
 # No pongo el .env porque este proyecto es solamente para prácticar
@@ -28,4 +27,4 @@ build/
 dist/
 
 /config/reference.php
-# /public/uploads/
+/public/uploads/

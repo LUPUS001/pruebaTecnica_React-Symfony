@@ -5,6 +5,7 @@ import BookHeader from "./components/BookHeader";
 import BookImport from "./components/BookImport";
 import BookEdit from "./components/BookEdit";
 import "./App.css";
+import Pagination from "./components/Pagination";
 
 
 function App() {
@@ -18,10 +19,15 @@ function App() {
     const [searchQuery, setSearchQuery] = useState(""); // Estado para el buscador (le indica a React que abra el formulario para editar los datos del libro)
     // guardamos el libro que se esta editando en el estado editingBook
 
+    //Estados para la paginación 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [limit] = useState(12); // 12 = número de libros por página
+
     useEffect(() => {
-        fetchAllBooks();
+        fetchAllBooks(currentPage); // Carga la primera página de libros al cargar la app
         checkUserSession(); // Comprobamos si hay sesión al cargar (si el usuario estaba logueado, se mantendrá logueado)
-    }, []); // [] significa que se ejecutará solo una vez, al cargar la página
+    }, [currentPage]); // [] significa que se ejecutará solo una vez, al cargar la página
 
     const checkUserSession = async () => {
         try {
@@ -36,12 +42,15 @@ function App() {
     };
 
 
-    // Función que obtiene todos los libros de la base de datos
-    const fetchAllBooks = async () => {
+    // Función que obtiene todos los libros de la base de datos 
+    const fetchAllBooks = async (page = 1) => { // page = 1 es el valor por defecto (la primera página) si no se le pasa un valor
         try {
-            const response = await fetch("/books");
-            const data = await response.json();
-            setBooks(data);
+            const response = await fetch(`/books?page=${page}&limit=${limit}`); // Petición al servidor enviando la página solicitada y el límite de libros por página
+            const data = await response.json(); // Convertimos la respuesta a JSON
+
+            // La API ahora devuelve un objeto { books, total_pages, ... }
+            setBooks(data.books || []); // books = array de libros
+            setTotalPages(data.total_pages || 1); // total_pages = número total de páginas
             setViewMode("all"); // all = todos los libros
         } catch (error) {
             console.error(error);
@@ -54,6 +63,7 @@ function App() {
             if (response.ok) {
                 const data = await response.json();
                 setBooks(data);
+                setTotalPages(1); // 1 = solo una página de libros
                 setViewMode("mine"); // mine = solo mis libros
             } else {
                 alert("Debes iniciar sesión para ver tus libros");
@@ -99,6 +109,7 @@ function App() {
             const response = await fetch(`/book/year/${year}`);
             const data = await response.json();
             setBooks(data);
+            setTotalPages(1); // 1 = solo una página de libros
         } catch (error) {
             console.error(error);
         }
@@ -113,6 +124,7 @@ function App() {
             const response = await fetch(`/book/category/${category}`);
             const data = await response.json();
             setBooks(data);
+            setTotalPages(1); // 1 = solo una página de libros
         } catch (error) {
             console.error(error);
         }
@@ -262,6 +274,12 @@ function App() {
             {/* Formulario para agregar un nuevo libro - SOLO PARA LOGUEADOS */}
             {user && <BookAdd setBooks={viewMode === "all" ? setBooks : fetchMyBooks}></BookAdd>}
             <hr />
+
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+            />
             <br />
 
             {/* Lista de libros */}

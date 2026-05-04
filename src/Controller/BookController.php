@@ -16,34 +16,52 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 final class BookController extends AbstractController
 {
     private $em;
-    public function __construct(EntityManagerInterface $em) {
+    public function __construct(EntityManagerInterface $em)
+    {
         $this->em = $em;
     }
 
     // Webservices REST que devuelven información en formato JSON
 
     #[Route('/books', name: 'app_book')]
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $books = $this->em->getRepository(Book::class)->findAll(); // Obtenemos todos los libros
+        $page = $request->query->getInt('page', 1); // Página actual, por defecto 1
+        $limit = $request->query->getInt('limit', 12); // Libros por página, por defecto 12 (múltiplo de 2, 3, 4 para grid)
+        $offset = ($page - 1) * $limit; // Cálculo de dónde empezar a leer en la base de datos
+
+        $repository = $this->em->getRepository(Book::class);
+
+        // Obtenemos los libros paginados y ordenados por los más recientes primero
+        $books = $repository->findBy([], ['id' => 'DESC'], $limit, $offset);
+        $total_books = $repository->count([]); // Contamos el número total de libros
+
         $data = []; // Array donde guardaremos los libros
 
         foreach ($books as $book) { // Recorremos todos los libros
             $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
         }
 
-        return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
+        return new JsonResponse([
+            'books' => $data,
+            'total' => $total_books,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => ceil($total_books / $limit)
+
+        ]); // Devolvemos el array de libros en formato JSON
     }
 
     // Webservices REST que permiten Create y Delete
-    
+
     #[Route('/book/add', name: 'add_book', methods: ['POST'])]
-    public function add_book(Request $request): Response {
+    public function add_book(Request $request): Response
+    {
         $book = new Book();
         $form = $this->createForm(BookType::class, $book);
-        
+
         // Unimos los campos de texto y los archivos para que el formulario los procese de una vez
-        $form->submit(array_merge($request->request->all(), $request->files->all())); 
+        $form->submit(array_merge($request->request->all(), $request->files->all()));
         /*
             $request->request->all() -> Devuelve todos los campos de texto del formulario (título, autor, ISBN...)
             $request->files->all() -> Devuelve todos los archivos del formulario (imagen)
@@ -53,7 +71,7 @@ final class BookController extends AbstractController
 
         // Si el formulario es válido, guardamos el libro
         if ($form->isValid()) {
-            
+
             // Normalización de la categoría antes de guardar
             if ($book->getCategory()) { // Si el libro tiene categoría
                 $book->setCategory(ucfirst(strtolower($book->getCategory()))); // Convierte la categoría a "Ficción" (primera letra mayúscula y el resto minúsculas)
@@ -67,17 +85,17 @@ final class BookController extends AbstractController
             $uploadedFiles = $form->get('image')->getData(); // Obtenemos las imágenes del formulario (ahora es un array)
             if ($uploadedFiles) { // Si hay imágenes
                 $destination = $this->getParameter('kernel.project_dir') . '/public/images'; // Obtenemos la ruta de la carpeta images
-                
+
                 foreach ($uploadedFiles as $uploadedFile) { // Recorremos cada imagen subida
-                    $isbn = $book->getIsbn(); 
+                    $isbn = $book->getIsbn();
                     // Generamos un nombre único para cada imagen para evitar que choquen, ya que al subir una imagen esta "hereda como nombre" 
                     // el isbn del libro, si hay varias imágenes necesitamos el uniqid para que no tengan el mismo nombre y no se sobrescriban entre sí
-                    $newFilename = ($isbn ?: uniqid()) . '-' . uniqid() . '.' . $uploadedFile->guessExtension(); 
-                    
+                    $newFilename = ($isbn ?: uniqid()) . '-' . uniqid() . '.' . $uploadedFile->guessExtension();
+
                     // Intentamos mover la imagen a la carpeta images
                     try {
                         $uploadedFile->move($destination, $newFilename); // Movemos la imagen a la carpeta images
-                        
+
                         $image = new Image(); // Creamos una nueva imagen
                         $image->setRutaArchivo('/images/' . $newFilename); // Guardamos la ruta de la imagen
                         $image->setBook($book); // Asociamos la imagen al libro
@@ -101,10 +119,11 @@ final class BookController extends AbstractController
         return new JsonResponse(['errors' => $errors], 400); // Devolvemos el array de errores en formato JSON
     }
 
-    
+
     // Renombramos a nombres en inglés para consistencia con el resto de la API
     #[Route('/book/delete/{isbn}', name: 'delete_book', methods: ['DELETE'])]
-    public function delete_book($isbn): Response {
+    public function delete_book($isbn): Response
+    {
         $bookDelete = $this->em->getRepository(Book::class)->findOneBy(['isbn' => $isbn]);
 
         if (!$bookDelete) {
@@ -134,12 +153,13 @@ final class BookController extends AbstractController
     }
 
     #[Route('/book/edit/{isbn}', name: 'edit_book', methods: ['POST'])] // usamos POST porque vamos a modificar el libro
-    public function edit_book(Request $request, $isbn): Response { 
+    public function edit_book(Request $request, $isbn): Response
+    {
         /*
            $request -> contiene los datos enviados por el formulario (su titulo, autor...)
            $isbn -> contiene el isbn del libro que se quiere editar
         */
-        
+
         $book = $this->em->getRepository(Book::class)->findOneBy(['isbn' => $isbn]); // Buscamos el libro por su isbn
 
         if (!$book) { // Si no existe el libro
@@ -151,7 +171,7 @@ final class BookController extends AbstractController
             return new JsonResponse(['error' => 'No tienes permiso para editar este libro'], 403);
         }
 
-        
+
         /* MINI REPASO */
         // Creamos el formulario y le pasamos el libro que queremos editar
         $form = $this->createForm(BookType::class, $book);
@@ -171,7 +191,7 @@ final class BookController extends AbstractController
          * 
          * false: Indica que no queremos validar los datos del formulario, es decir, que solo queremos sobreescribir lo que editemos, si fuera
          * true, borraría todo el libro y lo volvería a crear con los datos que le pasemos.
-        **/
+         **/
 
         // Gracias a estas 2 líneas editando el libro, no tienes que hacer if ($nuevoTitulo) $book->setTitle($nuevoTitulo); para cada uno de los 10 o 12 campos 
         // que tiene tu entidad. Symfony lo hace por ti comparando el paquete con el objeto.
@@ -188,7 +208,7 @@ final class BookController extends AbstractController
             $uploadedFiles = $form->get('image')->getData(); // getData() obtiene los datos del formulario (en este caso, las imágenes subidas)
 
             // Si el usuario sube nuevas imágenes
-            if ($uploadedFiles) { 
+            if ($uploadedFiles) {
                 // guarda la imagen físicamente en la carpeta /public/images y crea una nueva entidad Image en la base de datos (vinculada al libro)
                 $destination = $this->getParameter('kernel.project_dir') . '/public/images';
                 foreach ($uploadedFiles as $uploadedFile) {
@@ -196,7 +216,7 @@ final class BookController extends AbstractController
                     // el isbn del libro, si hay varias imágenes necesitamos el uniqid para que no tengan el mismo nombre y no se sobrescriban entre sí
                     $newFilename = ($book->getIsbn() ?: uniqid()) . '-' . uniqid() . '.' . $uploadedFile->guessExtension();
                     $uploadedFile->move($destination, $newFilename);
-                    
+
                     $image = new Image();
                     $image->setRutaArchivo('/images/' . $newFilename); // Guardamos la ruta de la imagen 
                     $image->setBook($book); // Asociamos la imagen al libro
@@ -223,7 +243,8 @@ final class BookController extends AbstractController
      * Estructura esperada: {"books": [{"isbn": "...", "title": "...", ...}]}
      */
     #[Route('/book/import', name: 'api_book_import_json', methods: ['POST'])]
-    public function import_books(Request $request, ValidatorInterface $validator): Response {
+    public function import_books(Request $request, ValidatorInterface $validator): Response
+    {
         $content = $request->getContent(); // Obtenemos el contenido del request/petición (el archivo JSON)
         $data = json_decode($content, true); // Decodificamos el contenido del request y lo convertimos a un array asociativo
 
@@ -236,10 +257,10 @@ final class BookController extends AbstractController
 
         foreach ($data['books'] as $bookData) { // Recorremos todos los libros
             $isbn = $bookData['isbn'] ?? null; // Obtenemos el ISBN del libro
-            
+
             // Antes de guardar el libro, verificamos si el ISBN es válido
             // Si el ISBN no es válido, saltamos el libro
-            if (!$isbn) { 
+            if (!$isbn) {
                 $skippedCount++; // Incrementamos el contador de libros saltados
                 continue; // Pasamos al siguiente libro
             }
@@ -258,19 +279,19 @@ final class BookController extends AbstractController
             $book->setSubtitle($bookData['subtitle'] ?? null);
             $book->setAuthor($bookData['author'] ?? 'Anónimo');
             $book->setPublisher($bookData['publisher'] ?? null);
-            $book->setPages((int)($bookData['pages'] ?? 0));
+            $book->setPages((int) ($bookData['pages'] ?? 0));
             $book->setDescription($bookData['description'] ?? null);
             $book->setWebsite($bookData['website'] ?? null);
-            
+
             // Categoría con normalización
             $category = $bookData['category'] ?? 'General';
             $book->setCategory(ucfirst(strtolower($category)));
 
             // Fecha de publicación
             if (isset($bookData['published'])) {
-                try { 
+                try {
                     $book->setPublished(new \DateTimeImmutable($bookData['published']));
-                } catch (\Exception $e) { 
+                } catch (\Exception $e) {
                     $book->setPublished(new \DateTimeImmutable());
                 }
             } else {
@@ -279,7 +300,7 @@ final class BookController extends AbstractController
 
             // 4. VALIDACIÓN ESTRICTA (Detección de las reglas de Book.php)
             // Validamos el libro ya relleno según las reglas definidas en la entidad Book.php (Asserts)
-            $errors = $validator->validate($book); 
+            $errors = $validator->validate($book);
             if (count($errors) > 0) { // Si hay errores de validación (ej: descripción demasiado larga, autor con números...), lo saltamos
                 $skippedCount++;
                 continue;
@@ -296,14 +317,14 @@ final class BookController extends AbstractController
         // Devolvemos un mensaje de éxito con el número de libros importados y saltados
         return new JsonResponse([
             'message' => 'Importación completada',
-            'imported' => $importedCount, 
-            'skipped' => $skippedCount 
+            'imported' => $importedCount,
+            'skipped' => $skippedCount
         ]);
     }
 
     #[Route('/book/year/{year}', name: 'books_by_year', methods: ['GET'])]
     public function books_by_year($year): Response
-    {    
+    {
         $books = $this->em->getRepository(Book::class)->findYear($year); // Obtenemos los libros del año seleccionado  
         $data = []; // Array donde guardaremos los libros
 
@@ -319,7 +340,7 @@ final class BookController extends AbstractController
     public function category_book($category): Response
     {
         // Normalizamos la categoría (Ej: "ficción" -> "Ficción") para asegurar que coincida con la DB
-        $books = $this->em->getRepository(Book::class)->findBy(['category' => ucfirst(strtolower($category))]);            
+        $books = $this->em->getRepository(Book::class)->findBy(['category' => ucfirst(strtolower($category))]);
         $data = [];
 
         foreach ($books as $book) {
@@ -335,9 +356,10 @@ final class BookController extends AbstractController
     // Obtenemos la información de un libro y sus imágenes asociadas
     // IMPORTANTE: Esta ruta debe ir AL FINAL de las que empiezan por /book/ para no interceptar otras (ej: /book/import)
     #[Route('/book/{isbn}', name: 'find_book', methods: ['GET'])]
-    public function find_book($isbn): Response {
+    public function find_book($isbn): Response
+    {
         $book = $this->em->getRepository(Book::class)->findBookImagen($isbn);
-        
+
         if (!$book) {
             return new JsonResponse(['error' => 'Libro no encontrado'], 404);
         }
@@ -364,7 +386,7 @@ final class BookController extends AbstractController
         return new JsonResponse($data);
     }
 
-    #[Route('/book/search/{query}', name: 'search_books', methods: ['GET'])] 
+    #[Route('/book/search/{query}', name: 'search_books', methods: ['GET'])]
     // cuando el front pida algo que empiece por /book/search/ (ej: /book/search/Berserk) 
     // se ejecutará este método y la variable $query será 'Berserk' 
     public function search_books($query): JsonResponse
@@ -374,10 +396,10 @@ final class BookController extends AbstractController
 
             ->where('b.title LIKE :query') // Buscamos por título
             ->orWhere('b.author LIKE :query') // O por autor
-            
+
             // Añadimos '%' para que busque en cualquier parte del título o autor (con que empiece, termine o contenga la palabra o letra)
-            ->setParameter('query', '%' . $query . '%') 
-             
+            ->setParameter('query', '%' . $query . '%')
+
             ->getQuery() // Enviamos la consulta que hemos creado a la base de datos
             ->getResult(); // Obtenemos el resultado
 

@@ -309,3 +309,33 @@ Nos dimos cuenta de que **no tiene sentido compartir un enlace a `localhost`**, 
 - Definir planes de contingencia (*fallbacks*) para que la aplicación nunca falle silenciosamente.
 - Pensar desde la perspectiva del usuario final (UX) a la hora de decidir qué datos es útil compartir.
 
+---
+
+## 📑 Paso 11: Paginación Dinámica y Sincronización de Datos
+
+Para que la aplicación sea escalable y profesional, no podíamos cargar todos los libros de golpe. Hemos implementado un sistema de paginación que divide el catálogo en "trozos" manejables.
+
+### 1. El Motor en el Backend (`BookController.php`)
+Hemos transformado el método `index` para que sea capaz de leer parámetros de la URL:
+- **Cálculo del Offset**: Usamos `page` y `limit` para decirle a la base de datos exactamente dónde empezar a leer (por ejemplo, para la página 2 con límite 12, empezamos en el libro 13).
+- **Metadatos**: El servidor ahora no solo devuelve libros, sino también el total de páginas disponibles (`total_pages`) y el número total de registros. Esto permite que React dibuje los botones necesarios.
+
+### 2. Estados y Efectos en React (`App.jsx`)
+La interfaz ahora es reactiva al cambio de página:
+- **Estado `currentPage`**: Controla en qué página estamos. Cada vez que este número cambia, el `useEffect` dispara automáticamente una nueva petición al servidor.
+- **Reseteo Inteligente**: Al filtrar por categorías o ver "Mis Libros", forzamos el total de páginas a 1 para limpiar los controles de navegación obsoletos.
+
+### 3. Sincronización del Límite
+Hemos conectado el estado `limit` de React directamente con la petición fetch:
+```javascript
+fetch(`/books?page=${page}&limit=${limit}`)
+```
+Esto asegura que el diseño (grid de 12 libros) y los datos del servidor estén siempre en perfecta armonía. Si cambias el diseño en React, el servidor se adapta solo.
+
+### 4. Documentación del Código (`Pagination.jsx`)
+Como parte de la profesionalización, hemos incluido comentarios detallados en el componente de paginación. Esto no solo ayuda a otros desarrolladores, sino que demuestra un control total sobre el flujo de datos: desde el bucle que genera los números de página hasta la lógica de los botones "Anterior" y "Siguiente".
+
+**Puntos clave aprendidos**:
+- Cómo usar `offset` y `limit` en el repositorio de Doctrine para optimizar consultas.
+- La importancia de sincronizar los parámetros de diseño entre cliente y servidor.
+- Mantener una interfaz limpia mediante la eliminación de llamadas redundantes a la API.
