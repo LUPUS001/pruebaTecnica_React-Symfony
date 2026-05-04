@@ -339,3 +339,29 @@ Como parte de la profesionalización, hemos incluido comentarios detallados en e
 - Cómo usar `offset` y `limit` en el repositorio de Doctrine para optimizar consultas.
 - La importancia de sincronizar los parámetros de diseño entre cliente y servidor.
 - Mantener una interfaz limpia mediante la eliminación de llamadas redundantes a la API.
+
+---
+
+## 🐛 Paso 12: Refinamiento Lógico de Filtros y Búsqueda (Solución de Bugs)
+
+Al integrar la paginación, detectamos y solucionamos **dos errores lógicos clásicos** en Single Page Applications (SPAs) relacionados con el estado de los componentes.
+
+### 1. El Problema de las Categorías "Desaparecidas"
+**El Bug:** Los menús desplegables extraían las categorías de la variable de estado `books`. Como introdujimos la paginación, `books` pasó a tener solo 12 elementos. Si en esos 12 elementos no había ningún libro de "Shonen", la categoría desaparecía del filtro. Al seleccionar "Fantasía", el menú se encogía a solo "Fantasía".
+**La Solución:** Separamos la obtención de filtros del renderizado principal. En `App.jsx`, creamos la función `fetchFilters()` que hace una petición "fantasma" sin mostrar los resultados (`/books?limit=1000`) **solo** para extraer las categorías y años completos.
+
+### 2. La Pérdida de Reactividad al Añadir/Borrar
+**El Bug:** Al meter `fetchFilters()` en un `useEffect` con dependencias vacías (`[]`), logramos que el menú cargase todas las categorías, pero **dejó de actualizarse en tiempo real**. Si añadías un libro con una categoría nueva, no aparecía en el menú hasta refrescar la página entera.
+**La Solución:** Convertimos `fetchFilters` en una función asíncrona independiente en `App.jsx` y se la pasamos como *prop* a los componentes "hijos" que alteran datos:
+- `BookAdd.jsx`: Al guardar un libro, ejecuta el callback `onBookAdded` definido en `App.jsx`, el cual se encarga de refrescar la lista y los filtros.
+- `BookList.jsx` -> `BookCard.jsx`: Reciben la función `fetchFilters` por props para actualizar el menú lateral inmediatamente tras un borrado.
+- `BookEdit.jsx`: Los filtros se refrescan automáticamente dentro de su función `onUpdate` tras confirmar una edición.
+
+### 3. Sincronización de Búsqueda
+**El Bug:** Al buscar un libro por texto (ej: "Harry Potter"), la aplicación mostraba los resultados pero los controles de paginación de abajo seguían presentes y rotos.
+**La Solución:** Modificamos la función `handleSearch` para que invoque `setTotalPages(1)`. De este modo, la paginación se "esconde" inteligentemente cuando el usuario hace una búsqueda específica. Además, forzamos un retorno a la primera página (`setCurrentPage(1)`) cada vez que el usuario limpia los filtros.
+
+**Puntos clave aprendidos**:
+- En React, el estado en pantalla no siempre debe ser la única fuente de la verdad para generar filtros.
+- Pasar funciones de recarga (`fetchFilters`) hacia los componentes hijos es un patrón muy limpio para mantener el estado global sincronizado sin usar herramientas complejas como Redux.
+- Al cambiar la forma en la que una aplicación obtiene sus datos (como añadir paginación), siempre hay que auditar las funciones secundarias (búsqueda, filtros) para ver cómo les afecta el nuevo flujo.

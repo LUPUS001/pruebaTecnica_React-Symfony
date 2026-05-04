@@ -10,6 +10,10 @@ function BookList(props) {
                 book={book}
                 setSelectedBook={setSelectedBook}
                 setBooks={setBooks}
+                /*
+                fetchFilters: Función que permite refrescar los filtros del menú lateral, después de eliminar o editar un libro.
+                */
+                fetchFilters={props.fetchFilters}
                 user={user} // La información de quién esta logueado
                 onEdit={onEdit} // La función que permite editar el libro, la que abre el modal/formulario de edición
             ></BookCard>
