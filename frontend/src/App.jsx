@@ -73,40 +73,18 @@ function App() {
         }
     };
 
-    // (＊1) Función para obtener una lista completa de categorías y años (se llama al inicio y tras modificaciones)
+    // (＊1) Función profesional para obtener categorías y años directamente desde la API (sin cargar libros)
     const fetchFilters = async () => {
         try {
-            // Pedimos un límite alto para tener todos los libros y extraer sus categorías/años
-            const response = await fetch("/books?limit=1000"); // 1000 = límite de libros (es poco probable tener más de 1000 libros en el caso de nuestra app)
-            const result = await response.json(); // Convertimos la respuesta a JSON
-            const allBooks = result.books || []; // books = array de libros
+            // Llamamos al nuevo endpoint profesional que devuelve solo los datos únicos
+            const response = await fetch("/books/filters");
+            const data = await response.json();
 
-            const categories = []; // Array para guardar las categorías
-            const years = []; // Array para guardar los años
-
-            // Recorremos todos los libros para obtener las categorías y años
-            allBooks.forEach((book) => {
-                // Si el libro tiene una categoría y no está ya en nuestra lista 'categories', lo añadimos
-                if (book.category && !categories.includes(book.category)) {
-                    categories.push(book.category);
-                }
-                // En el filtro if también ponemos book.category, porque sino podríamos añadir categorías vacías,
-
-                // Si el libro tiene una fecha de publicación y no está ya en nuestra lista 'years', lo añadimos
-                if (book.published) {
-                    let year = book.published.split("-")[0];
-                    // split("-")[0] para obtener solo el año (2013) y no la fecha completa (2013-01-01)
-
-                    // Si el año no está ya en nuestra lista 'years', lo añadimos
-                    if (!years.includes(year)) {
-                        years.push(year);
-                    }
-                }
-            });
-            setAllCategories(categories.sort()); // sort() ordena alfabéticamente
-            setAllYears(years.sort((a, b) => b - a)); // sort() ordena numéricamente de mayor a menor
+            // Actualizamos los estados con la información limpia recibida del servidor
+            setAllCategories(data.categories || []);
+            setAllYears(data.years || []);
         } catch (error) {
-            console.error("Error al cargar filtros:", error);
+            console.error("Error al cargar los filtros:", error);
         }
     };
 
@@ -130,7 +108,7 @@ function App() {
     // await es una palabra clave que se usa para esperar a que una promesa se resuelva. Para que la página no se quede en blanco mientras espera a que el servidor responda.
 
 
-    // Recibimos la categoría que nos llega desde el botón handleFilterByCategory
+    // Función para obtener los libros filtrados por una categoría específica
     const fetchCategoryBooks = async (category) => {
         try {
             const response = await fetch(`/book/category/${category}`);
@@ -142,14 +120,7 @@ function App() {
         }
     };
 
-    // Aquí será donde recibiremos la categoría que busca el usuario
-    const handleFilterByCategory = () => {
-        const category = prompt("Introduce la categoría"); // prompt() es una función que muestra un cuadro de diálogo que pide al usuario que introduzca un valor.
 
-        if (category) { // Si el usuario introduce un valor, lo guardamos en la variable category
-            fetchCategoryBooks(category); // Llamamos a la función fetchCategoryBooks con el valor de category
-        }
-    };
 
     const handleCategoryChange = (e) => {
         const category = e.target.value; // e.target.value es el valor que se selecciona en el menú desplegable (por ejemplo, "Fantasía", "Ciencia Ficción", etc.)
@@ -164,13 +135,7 @@ function App() {
         }
     };
 
-    // Aquí será donde recibiremos el año que busca el usuario
-    const handleFilterByYear = () => {
-        const yearSelected = prompt("Introduce el año");
-        if (yearSelected) {
-            fetchFindYear(yearSelected);
-        }
-    };
+
 
     const handleYearChange = (e) => {
         const yearSelected = e.target.value;
@@ -259,7 +224,7 @@ function App() {
                     className="search-input"
                 />
 
-                <button onClick={fetchAllBooks} className="filter-button secondary">
+                <button onClick={() => fetchAllBooks(1)} className="filter-button secondary">
                     Todos los libros
                 </button>
 
@@ -288,7 +253,7 @@ function App() {
                             fetchFilters(); // Recargamos categorías/años por si se importan nuevas
                         }} />
                         <button
-                            onClick={viewMode === "all" ? fetchMyBooks : fetchAllBooks}
+                            onClick={() => viewMode === "all" ? fetchMyBooks() : fetchAllBooks(1)}
                             className={`view-mode-button ${viewMode === "mine" ? "active" : "inactive"}`}
                         >
                             {viewMode === "all" ? "Mis Libros" : "Catálogo Global"}
@@ -350,21 +315,20 @@ function App() {
 export default App;
 
 /* 
-(＊1)
-   ¿Por qué sacamos esta lógica de filtros fuera del useEffect?
-       
-   El problema: Si la lógica de extraer categorías y años está encerrada dentro de un useEffect con 
-   corchetes vacíos [], solo se ejecuta una vez al cargar la página. Si el usuario añade un libro 
-   con una categoría nueva (ej: "Misterio"), el menú desplegable no se actualizaría hasta que 
-   el usuario pulsara F5, ya que no podíamos obligar al useEffect a ejecutarse de nuevo.
+(＊1) 
+   REUTILIZACIÓN Y OPTIMIZACIÓN (fetchFilters):
 
-   La Solución (REUTILIZACIÓN): Al sacar la lógica a esta función independiente (fetchFilters):
-   1. La llamamos al inicio dentro del useEffect para la carga inicial.
-   2. La podemos "disparar" manualmente desde cualquier otra parte (como al añadir o borrar un libro).
-       
-   De este modo, la app es capaz de "pulsar el botón" de refrescar filtros por sí sola tras cada 
-   modificación, manteniendo el menú siempre actualizado en tiempo real.
+   ¿Por qué sacamos esta lógica fuera del useEffect?
+   Si la lógica de obtener categorías estuviera encerrada dentro de un useEffect con [], solo 
+   se ejecutaría una vez al inicio. Al sacarla a esta función independiente (fetchFilters), podemos 
+   "dispararla" manualmente cada vez que hay un cambio (POST/DELETE/PUT). De este modo, el menú 
+   lateral se actualiza en tiempo real sin que el usuario tenga que refrescar la página entera.
 
+   ¿Por qué usar una API específica (/api/books/filters)?
+   En la versión anterior pedíamos 1000 libros solo para extraer sus categorías en JavaScript. 
+   Esto era ineficiente (consumía mucha memoria y ancho de banda). Ahora usamos un endpoint 
+   profesional en Symfony que utiliza consultas DISTINCT directamente en la base de datos.
+   Es una solución escalable: funcionará igual de rápido con 100 libros que con 1 millón.
 */
 
 /*

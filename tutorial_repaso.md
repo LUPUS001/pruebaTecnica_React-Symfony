@@ -348,7 +348,7 @@ Al integrar la paginación, detectamos y solucionamos **dos errores lógicos cl�
 
 ### 1. El Problema de las Categorías "Desaparecidas"
 **El Bug:** Los menús desplegables extraían las categorías de la variable de estado `books`. Como introdujimos la paginación, `books` pasó a tener solo 12 elementos. Si en esos 12 elementos no había ningún libro de "Shonen", la categoría desaparecía del filtro. Al seleccionar "Fantasía", el menú se encogía a solo "Fantasía".
-**La Solución:** Separamos la obtención de filtros del renderizado principal. En `App.jsx`, creamos la función `fetchFilters()` que hace una petición "fantasma" sin mostrar los resultados (`/books?limit=1000`) **solo** para extraer las categorías y años completos.
+**La Solución (Profesional):** En lugar de pedir 1000 libros para extraer sus datos, hemos creado un endpoint específico en el backend (`/api/books/filters`). Este endpoint realiza una consulta optimizada a la base de datos para devolver directamente las categorías y años únicos. Es una solución mucho más escalable y profesional que ahorra ancho de banda, memoria y que si la aplicación crece, podrá seguir funcionando aunque haya millones de libros. Además, al usar la API, nos aseguramos de que siempre obtenemos los datos más recientes.  
 
 ### 2. La Pérdida de Reactividad al Añadir/Borrar
 **El Bug:** Al meter `fetchFilters()` en un `useEffect` con dependencias vacías (`[]`), logramos que el menú cargase todas las categorías, pero **dejó de actualizarse en tiempo real**. Si añadías un libro con una categoría nueva, no aparecía en el menú hasta refrescar la página entera.
@@ -365,3 +365,4 @@ Al integrar la paginación, detectamos y solucionamos **dos errores lógicos cl�
 - En React, el estado en pantalla no siempre debe ser la única fuente de la verdad para generar filtros.
 - Pasar funciones de recarga (`fetchFilters`) hacia los componentes hijos es un patrón muy limpio para mantener el estado global sincronizado sin usar herramientas complejas como Redux.
 - Al cambiar la forma en la que una aplicación obtiene sus datos (como añadir paginación), siempre hay que auditar las funciones secundarias (búsqueda, filtros) para ver cómo les afecta el nuevo flujo.
+- Crear endpoints específicos para metadatos (como una lista de categorías) es mucho más eficiente que filtrar grandes volúmenes de datos en el cliente.

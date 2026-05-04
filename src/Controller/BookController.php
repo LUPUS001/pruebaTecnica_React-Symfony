@@ -335,7 +335,7 @@ final class BookController extends AbstractController
         return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
     }
 
-    // Creamos una ruta dinámica donde recibimos la categoría que nos llega desde el botón handleFilterByCategory
+    // Ruta para filtrar libros por categoría (llamada desde handleCategoryChange en React)
     #[Route('/book/category/{category}', name: 'category_book', methods: ['GET'])]
     public function category_book($category): Response
     {
@@ -365,6 +365,43 @@ final class BookController extends AbstractController
         }
 
         return new JsonResponse($book->toArray());
+    }
+
+    // Creamos una ruta para obtener las categorías y años únicos de los libros de la base de datos 
+    #[Route('/books/filters', name: 'books_filters', methods: ['GET'])]
+    public function get_filters(): JsonResponse
+    {
+        // 1. Obtenemos las categorías únicas de forma eficiente
+        $categories = $this->em->createQuery(
+            'SELECT DISTINCT b.category 
+             FROM App\Entity\Book b 
+             WHERE b.category IS NOT NULL AND b.category != \'\' -- Filtramos nulos y vacíos para no tener opciones vacías en el menú
+             ORDER BY b.category ASC' // Ordenamos las categorías por orden alfabético 
+        )->getSingleColumnResult();
+        // getSingleColumnResult() devuelve un array con los resultados de la consulta (ej: ['Ficción', 'Ciencia Ficción', 'Novela', etc.])
+
+        // 2. Obtenemos los años únicos
+        // Como DQL estándar no tiene función YEAR(), obtenemos las fechas y extraemos el año en PHP.
+        // Esto es mucho más ligero que pedir 1000 libros completos.
+        $dates = $this->em->createQuery(
+            'SELECT DISTINCT b.published 
+             FROM App\Entity\Book b 
+             WHERE b.published IS NOT NULL'
+        )->getResult();
+
+        $years = [];
+        foreach ($dates as $date) { // Recorremos todas las fechas obtenidas
+            $year = $date['published']->format('Y'); // format() es un método de la clase DateTimeImmutable que se usa para formatear la fecha (en este caso, el año)
+            if (!in_array($year, $years)) { // in_array() es una función de PHP que comprueba si un valor está en un array
+                $years[] = $year; // Añadimos el año al array si no existe
+            }
+        }
+        rsort($years); // Ordenamos los años de más reciente a más antiguo (descendente)
+
+        return new JsonResponse([
+            'categories' => $categories,
+            'years' => $years
+        ]);
     }
 
     // Webservices REST que permiten obtener los libros de un usuario concreto
