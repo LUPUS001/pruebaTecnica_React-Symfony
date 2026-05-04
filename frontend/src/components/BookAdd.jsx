@@ -1,8 +1,8 @@
 import { useState } from "react";
 
 function BookAdd(props) {
-    // Recibimos la función setBooks del componente BookList
-    const { setBooks } = props;
+    // Recibimos la función onBookAdded de App.jsx para notificarle que hemos guardado un libro
+    const { onBookAdded } = props;
 
     // Estados para almacenar los datos del formulario
     const [title, setTitle] = useState("");
@@ -77,8 +77,10 @@ function BookAdd(props) {
 
             if (response.ok) {
                 const savedBook = await response.json();
-                // Actualizamos el estado books con el nuevo libro
-                setBooks((prevBooks) => [...prevBooks, savedBook]);
+                // Le pasamos el nuevo libro a la función que nos enviaron desde App.jsx
+                if (onBookAdded) {
+                    onBookAdded(savedBook);
+                }
                 setTitle("");
                 setAuthor("");
                 setIsbn("");
