@@ -216,6 +216,14 @@ function App() {
         setCurrentFilter({ type: 'search', value: query });
     };
 
+    const resetFilters = () => {
+        setSearchQuery("");
+        setCurrentPage(1);
+        setViewMode("all");
+        setCurrentFilter({ type: 'all', value: null });
+        fetchAllBooks(1);
+    };
+
     const handleBookDeleted = () => {
         if (viewMode === "mine") {
             fetchMyBooks();
@@ -262,18 +270,26 @@ function App() {
                     className="search-input"
                 />
 
-                <button onClick={() => { setCurrentPage(1); fetchAllBooks(1); }} className="filter-button secondary">
+                <button onClick={resetFilters} className="filter-button secondary">
                     Todos los libros
                 </button>
 
-                <select onChange={handleCategoryChange} className="filter-select">
+                <select 
+                    onChange={handleCategoryChange} 
+                    className="filter-select"
+                    value={currentFilter.type === 'category' ? currentFilter.value : 'all'}
+                >
                     <option value="all">Todas las categorías</option>
                     {allCategories.map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>
                     ))}
                 </select>
 
-                <select onChange={handleYearChange} className="year-select">
+                <select 
+                    onChange={handleYearChange} 
+                    className="year-select"
+                    value={currentFilter.type === 'year' ? currentFilter.value : 'all'}
+                >
                     <option value="all">Todos los años</option>
                     {allYears.map((yearSelected) => (
                         <option key={yearSelected} value={yearSelected}>{yearSelected}</option>
