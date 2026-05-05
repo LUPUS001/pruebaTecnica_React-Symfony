@@ -77,8 +77,12 @@ function BookAdd(props) {
 
             if (response.ok) {
                 const savedBook = await response.json();
-                // Actualizamos el estado books con el nuevo libro
-                setBooks((prevBooks) => [...prevBooks, savedBook]);
+                // Notificamos al padre para que refresque TODO (libros y filtros)
+                if (props.onBookAdded) {
+                    props.onBookAdded(savedBook);
+                }
+
+                // Limpiamos el formulario para el siguiente libro
                 setTitle("");
                 setAuthor("");
                 setIsbn("");
@@ -86,10 +90,9 @@ function BookAdd(props) {
                 setPages("");
                 setDescription("");
                 setPublished(today);
-                setImages([]); // Limpiamos las imágenes para que no se muestren en el siguiente renderizado 
-                e.target.reset(); // Limpiamos el formulario
+                setImages([]);
+                e.target.reset();
 
-                // Feedback visual en lugar de alert
                 setSuccess(true);
                 setTimeout(() => setSuccess(false), 3000);
             } else if (response.status === 400) {

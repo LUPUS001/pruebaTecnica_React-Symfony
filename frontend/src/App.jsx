@@ -94,34 +94,34 @@ function App() {
 
     // Obtenemos una lista completa para las categorías y años (sin paginar para el menú)
     // Esto es necesario para que los filtros tengan todas las opciones disponibles
+    const fetchFilters = async () => {
+        try {
+            const response = await fetch("/books?limit=1000");
+            const result = await response.json();
+            const allBooks = result.books || [];
+
+            const categories = [];
+            const years = [];
+
+            allBooks.forEach((book) => {
+                if (book.category && !categories.includes(book.category)) {
+                    categories.push(book.category);
+                }
+                if (book.published) {
+                    let year = book.published.split("-")[0];
+                    if (!years.includes(year)) {
+                        years.push(year);
+                    }
+                }
+            });
+            setAllCategories(categories.sort());
+            setAllYears(years.sort((a, b) => b - a));
+        } catch (error) {
+            console.error("Error al cargar filtros:", error);
+        }
+    };
+
     useEffect(() => {
-        const fetchFilters = async () => {
-            try {
-                // Hacemos una petición con un límite muy alto para obtener todos los libros solo para filtrar
-                const response = await fetch("/books?limit=1000");
-                const result = await response.json();
-                const allBooks = result.books || [];
-
-                const categories = [];
-                const years = [];
-
-                allBooks.forEach((book) => {
-                    if (book.category && !categories.includes(book.category)) {
-                        categories.push(book.category);
-                    }
-                    if (book.published) {
-                        let year = book.published.split("-")[0];
-                        if (!years.includes(year)) {
-                            years.push(year);
-                        }
-                    }
-                });
-                setAllCategories(categories.sort());
-                setAllYears(years.sort((a, b) => b - a));
-            } catch (error) {
-                console.error("Error al cargar filtros:", error);
-            }
-        };
         fetchFilters();
     }, []);
 
@@ -208,6 +208,7 @@ function App() {
             setCurrentPage(1);
             setViewMode("all");
             setCurrentFilter({ type: 'all', value: null });
+            fetchAllBooks(1); // Carga de nuevo todo al borrar la búsqueda
             return;
         }
 
@@ -225,6 +226,7 @@ function App() {
     };
 
     const handleBookDeleted = () => {
+        fetchFilters(); // Refrescamos categorías y años
         if (viewMode === "mine") {
             fetchMyBooks();
         } else {
@@ -233,8 +235,30 @@ function App() {
             else if (currentFilter.type === 'year') fetchFindYear(currentFilter.value, currentPage);
             else if (currentFilter.type === 'search') executeSearch(currentFilter.value, currentPage);
         }
-        // fetchFilters() se dispara solo si usamos el nuevo endpoint, 
-        // pero en esta rama mantenemos tu lógica de filtros manual por ahora para no romper la purpurina.
+    };
+
+    const handleBookUpdated = (updatedBook) => {
+        fetchFilters(); // Por si cambió la categoría o año
+        
+        // Actualizamos el header si es el libro que estamos viendo
+        if (selectedBook && selectedBook.isbn === updatedBook.isbn) {
+            setSelectedBook(updatedBook);
+        }
+
+        // Refrescamos la vista actual para aplicar filtros si cambiaron
+        if (viewMode === "mine") {
+            fetchMyBooks();
+        } else {
+            if (currentFilter.type === 'all') fetchAllBooks(currentPage);
+            else if (currentFilter.type === 'category') fetchCategoryBooks(currentFilter.value, currentPage);
+            else if (currentFilter.type === 'year') fetchFindYear(currentFilter.value, currentPage);
+            else if (currentFilter.type === 'search') executeSearch(currentFilter.value, currentPage);
+        }
+    };
+
+    const handleBookAdded = () => {
+        fetchFilters();
+        resetFilters(); // Al añadir, lo mejor es volver al catálogo general para ver el nuevo libro
     };
 
     return (
@@ -312,10 +336,7 @@ function App() {
             {/* Los selectores ahora están dentro del toolbar de arriba */}
 
             {/* Formulario para agregar un nuevo libro - SOLO PARA LOGUEADOS */}
-            {user && <BookAdd setBooks={(newBook) => {
-                if (currentPage === 1) fetchAllBooks(1);
-                else setCurrentPage(1);
-            }}></BookAdd>}
+            {user && <BookAdd onBookAdded={handleBookAdded}></BookAdd>}
             <hr />
             
             <Pagination 
@@ -346,7 +367,7 @@ function App() {
                     onCancel={() => setEditingBook(null)} // cancelamos la edición y cerramos el modal
 
                     onUpdate={(updatedBook) => {
-                        setBooks(prev => prev.map(b => b.isbn === updatedBook.isbn ? updatedBook : b)); // actualizamos el libro antiguo por el nuevo
+                        handleBookUpdated(updatedBook); // nueva función robusta
                         setEditingBook(null); // cerramos el modal
                     }}
                 />
