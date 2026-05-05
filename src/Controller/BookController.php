@@ -324,10 +324,17 @@ final class BookController extends AbstractController
         $offset = ($page - 1) * $limit;
 
         $repository = $this->em->getRepository(Book::class);
-        $books = $repository->findBy(['published' => new \DateTime($year . '-01-01')], ['id' => 'DESC'], $limit, $offset);
-        // Nota: findYear es un método custom, aquí usamos findBy para simplificar la paginación si no está implementada en el repo
-        
-        $totalBooks = count($repository->findBy(['published' => new \DateTime($year . '-01-01')]));
+        $qb = $repository->createQueryBuilder('b')
+            ->where('b.published LIKE :year')
+            ->setParameter('year', $year . '%');
+
+        $totalBooks = count((clone $qb)->getQuery()->getResult());
+
+        $books = $qb->orderBy('b.id', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
 
         $data = [];
         foreach ($books as $book) {
