@@ -391,6 +391,11 @@ Al cambiar el estado de React, el `useEffect` detecta automáticamente el cambio
 ```
 Con esto, si el cerebro (estado) cambia a `"all"`, la casilla está obligada a cambiar visualmente a "Todas las categorías" al instante.
 
+### 3. Cuidado con la "Actualización Optimista"
+**El Bug:** Al añadir un libro nuevo, usábamos `setBooks(prev => [...prev, newBook])`. Esto pegaba el libro al final de la página actual. Sin embargo, el límite de la página era de 12, por lo que creábamos 13 elementos. Además, el servidor ordena los libros recientes primero (`DESC`), así que el orden visual quedaba al revés.
+**La Solución:** En lugar de manipular el array localmente, forzamos al "cerebro" a volver al inicio del catálogo y pedirle la primera página fresca al servidor (`fetchAllBooks(1)`). Así, el libro recién insertado aparece en la primera posición instantáneamente.
+
 **Puntos clave aprendidos**:
 - **Single Source of Truth (Única Fuente de la Verdad)**: Nunca intentes actualizar la vista haciendo un `fetch` directo si tienes un `useEffect` escuchando un estado. Actualiza el estado y deja que React haga el resto.
 - **Componentes Controlados**: Los elementos de formulario en React siempre deben tener un `value` atado a un estado para que no se desincronicen visualmente.
+- **El Peligro de Manipular Arrays**: En aplicaciones paginadas u ordenadas desde el servidor, evitar insertar elementos "a mano" en el array de React (`[...prev]`). Es mucho más seguro forzar una recarga de los primeros elementos desde la API para garantizar el orden correcto.

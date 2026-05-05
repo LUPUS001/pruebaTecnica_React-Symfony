@@ -327,10 +327,29 @@ function App() {
             {/* Los selectores ahora están dentro del toolbar de arriba */}
 
             {/* Formulario para agregar un nuevo libro - SOLO PARA LOGUEADOS */}
-            {user && <BookAdd onBookAdded={(newBook) => { // (*2) newBook es el libro que acabamos de crear
-                // Si estamos viendo todo el catálogo, añadimos el libro a la lista en pantalla
+            {user && <BookAdd onBookAdded={() => { // (*2) el libro que acabamos de crear se recargará desde el servidor
+                // Al añadir un libro, forzamos un reseteo al inicio del catálogo para que el 
+                // libro recién añadido (orden DESC) aparezca el primero
                 if (viewMode === "all") {
-                    setBooks((prevBooks) => [...prevBooks, newBook]); // prevBooks = libros anteriores + nuevo libro
+                    /*
+                    ¿Por qué ya no usamos setBooks((prevBooks) => [...prevBooks, newBook])?
+                    
+                    ANTES: Pegábamos el libro nuevo "a mano" al final del array local. 
+                    - Problema 1: Se rompía el límite de paginación (si el límite era 12, pasábamos a tener 13 en pantalla).
+                    - Problema 2: El servidor manda los libros más nuevos PRIMERO (ORDER BY id DESC). 
+                      Al pegarlo al final, el orden visual quedaba al revés.
+
+                    AHORA: 
+                    1. setCurrentFilter: Limpiamos cualquier filtro activo (ej: si estábamos en "Fantasía") para ver el catálogo global.
+                    2. setCurrentPage(1): Volvemos a la página 1 para asegurarnos de estar arriba del todo.
+                    3. fetchAllBooks(1): Forzamos la descarga desde el servidor. Si el usuario ya estaba en la página 1, 
+                       el `useEffect` NO saltaría por sí solo (porque la página no ha cambiado de valor). 
+                       Así garantizamos que la pantalla parpadee y el nuevo libro aparezca exactamente en la primera posición.
+                    */
+                    setCurrentFilter({ type: "all", value: null });
+                    setCurrentPage(1);
+                    fetchAllBooks(1); // Forzamos petición directa
+
                 } else {
                     // Si estamos en "Mis Libros", recargamos la lista desde el servidor
                     fetchMyBooks();
