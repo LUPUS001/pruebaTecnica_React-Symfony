@@ -1,19 +1,102 @@
-/* Estilos para el contenedor principal */
-/* Establece el ancho máximo y centra la app en la pantalla */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --bg-gradient: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+    --glass-bg: rgba(255, 255, 255, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg-gradient);
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    min-height: 100vh;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 .app-container {
     max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+    margin: 40px auto;
+    padding: 40px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 30px;
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    min-height: 80vh;
 }
 
 /* Header & Detalles del libro seleccionado */
-.app-header {
-    background-color: #f0f0f0;
-    padding: 20px;
-    margin-bottom: 20px;
+.app-top-bar {
     display: flex;
-    align-items: flex-start;
-    min-height: 180px;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 25px;
+    margin-bottom: 40px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.app-top-bar h1 {
+    margin: 0;
+    font-size: 2em;
+    font-weight: 700;
+    background: linear-gradient(135deg, #2c3e50, #000);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.user-info-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 8px 20px;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.user-profile-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary);
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.2);
+}
+
+.logout-link {
+    color: #ef4444;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9em;
+    padding: 6px 15px;
+    border-radius: 20px;
+    transition: all 0.2s;
+}
+
+.logout-link:hover {
+    background: #fef2f2;
+    transform: scale(1.05);
+}
+
+.view-mode-button.active {
+    background: var(--primary);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.view-mode-button.inactive {
+    background: #94a3b8;
 }
 
 
@@ -114,12 +197,20 @@ section {
 }
 
 .book-add-button {
-    padding: 8px 16px;
-    background-color: #000;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
     color: #fff;
     font-weight: 600;
     cursor: pointer;
-    border-radius: 15px;
+    border: none;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.book-add-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
 }
 
 /* Cuadrícula de libros (Grid) */
@@ -134,11 +225,38 @@ section {
 }
 
 .book-card-item {
-    border: 1px solid #ddd;
-    padding: 15px;
+    background: white;
+    border: 1px solid #f0f0f0;
+    padding: 20px;
     display: flex;
     align-items: center;
+    border-radius: 18px;
     cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: var(--card-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.book-card-item:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    border-color: var(--primary);
+}
+
+.book-card-item::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: 0.5s;
+}
+
+.book-card-item:hover::after {
+    left: 100%;
 }
 
 /* Contenedor de la imagen del libro seleccionado */
@@ -352,18 +470,17 @@ section {
 
 /* Toolbar y Filtros - VERSIÓN FINAL PIXEL PERFECT */
 .toolbar {
-    background: #fff;
-    padding: 10px 20px;
-    border-radius: 50px;
-    /* Forma de píldora moderna */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    margin: 20px auto 30px auto;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 15px 30px;
+    border-radius: 100px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    margin: 30px auto;
     display: flex;
     align-items: center;
-    gap: 12px;
-    border: 1px solid #eee;
+    gap: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
     width: fit-content;
-    /* Se ajusta al contenido para no verse estirado */
     max-width: 95%;
 }
 

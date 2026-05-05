@@ -231,24 +231,23 @@ function App() {
 
     return (
         <div className="app-container">
-            <header style={{ padding: '10px', background: '#f8f9fa', borderBottom: '1px solid #ddd', marginBottom: '20px', display: 'flex', justifyContent: 'space-between' }}>
+            <header className="app-top-bar">
                 <h1>Catálogo de Libros</h1>
-                {user ? ( // Si el usuario está logueado, mostramos su email y un botón para cerrar sesión
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                {user ? (
+                    <div className="user-info-section">
                         {user.photo && (
                             <img 
                                 src={user.photo} 
                                 alt="Profile" 
-                                style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #ddd' }} 
+                                className="user-profile-avatar"
                             />
                         )}
                         <span>Hola, <strong>{user.email}</strong></span>
-                        <a href={`${import.meta.env.VITE_BACKEND_URL}/logout`} style={{ marginLeft: '15px', color: 'red', textDecoration: 'none', fontWeight: 'bold' }}>Cerrar sesión</a>
+                        <a href={`${import.meta.env.VITE_BACKEND_URL}/logout`} className="logout-link">Cerrar sesión</a>
                     </div>
-                ) : ( // Si el usuario no está logueado, mostramos un enlace para iniciar sesión
+                ) : (
                     <a href={`${import.meta.env.VITE_BACKEND_URL}/login`} className="login-link">Iniciar sesión</a>
                 )}
-
             </header>
 
             <BookHeader selectedBook={selectedBook} />
@@ -286,8 +285,7 @@ function App() {
                         <BookImport onImportSuccess={() => { setCurrentPage(1); fetchAllBooks(1); }} />
                         <button
                             onClick={viewMode === "all" ? fetchMyBooks : () => { setCurrentPage(1); fetchAllBooks(1); }}
-                            className="view-mode-button"
-                            style={{ backgroundColor: viewMode === "mine" ? "#3498db" : "#6c757d" }}
+                            className={`view-mode-button ${viewMode === "mine" ? "active" : "inactive"}`}
                         >
                             {viewMode === "all" ? "Mis Libros" : "Catálogo Global"}
                         </button>
