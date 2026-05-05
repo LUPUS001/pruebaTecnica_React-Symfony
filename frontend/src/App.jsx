@@ -50,6 +50,13 @@ function App() {
             const response = await fetch(`/books?page=${page}&limit=${limit}`); // Petición al servidor enviando la página solicitada y el límite de libros por página
             const data = await response.json(); // Convertimos la respuesta a JSON
 
+            // Si el usuario borra el último libro de una página, el servidor nos dirá que esa página está vacía
+            // pero que existen páginas anteriores. En ese caso, bajamos automáticamente a la última página con contenido.
+            if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                setCurrentPage(data.total_pages);
+                return; // El useEffect detectará el cambio de currentPage y volverá a llamar a fetchAllBooks
+            }
+
             // La API ahora devuelve un objeto { books, total_pages, ... }
             setBooks(data.books || []); // books = array de libros
             setTotalPages(data.total_pages || 1); // total_pages = número total de páginas
@@ -228,6 +235,18 @@ function App() {
         }
     };
 
+    // Función que se dispara cuando un libro es eliminado con éxito
+    const handleBookDeleted = () => {
+        // Refrescamos la vista actual para que la paginación y el listado sean correctos
+        if (viewMode === "all") {
+            fetchAllBooks(currentPage);
+        } else {
+            fetchMyBooks();
+        }
+        // Actualizamos los filtros por si hemos borrado el último libro de una categoría
+        fetchFilters();
+    };
+
     return (
         <div className="app-container">
             <header className="app-top-bar">
@@ -356,6 +375,7 @@ function App() {
                 fetchFilters={fetchFilters} // Pasamos la función para recargar filtros tras eliminar
                 user={user} // pasamos el usuario a BookList para que le muestre los botones de editar y borrar si es el dueño o admin
                 onEdit={(book) => setEditingBook(book)} // pasamos la función onEdit a BookList para que pueda editar los libros
+                onBookDeleted={handleBookDeleted} // Notificación de que un libro ha sido borrado
             ></BookList>
 
             {/* Modal de edición */}

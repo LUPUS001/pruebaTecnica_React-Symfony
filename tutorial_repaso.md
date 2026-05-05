@@ -385,5 +385,41 @@ Al probar la aplicación para la presentación final, detectamos dos errores de 
 **La Solución:** En el callback `onBookAdded`, en lugar de sumar el libro al array localmente, forzamos un refresco (`fetchAllBooks(1)`). Así, el usuario ve instantáneamente su nuevo libro en la primera posición.
 
 **Puntos clave aprendidos:**
-- En React, todos los inputs y selects deben ser siempre **Componentes Controlados** (atar su `value` a una variable de estado) para garantizar que lo que ve el usuario coincide con la memoria de la aplicación.
-- ¡Cuidado con la abreviatura `onClick={funcion}`! Si tu función espera parámetros, envuélvela siempre en una *arrow function* (`onClick={() => funcion()}`).
+- En React, todos los inputs y selects deben ser siempre **Componentes Controlados** (atar su value a una variable de estado) para garantizar que lo que ve el usuario coincide con la memoria de la aplicación.
+- ¡Cuidado con la abreviatura onClick={funcion}! Si tu función espera parámetros, envuélvela siempre en una arrow function (onClick={() => funcion()}).
+
+---
+
+## 🗑️ Paso 14: Paginación Robusta en el Borrado (Sincronización Total)
+
+Para cerrar el círculo de la experiencia de usuario, hemos solucionado un comportamiento inesperado que ocurría al eliminar libros en un catálogo paginado.
+
+### 1. El Problema de la "Página Fantasma"
+**El Bug:** Si un usuario estaba en la última página del catálogo (por ejemplo, la página 3) y borraba el único libro que quedaba allí, la aplicación se quedaba "atrapada" mostrando una pantalla vacía. Esto ocurría porque la aplicación seguía pidiendo la página 3 al servidor, a pesar de que tras el borrado esa página ya no existía (el catálogo ahora solo tenía 2 páginas).
+
+### 2. Sincronización Real con el Backend
+**La Solución:** Aunque React filtraba el libro visualmente de forma instantánea para dar velocidad, ahora forzamos una **sincronización completa** con el servidor mediante un nuevo callback onBookDeleted.
+- **Refresco Automático**: Al borrar un libro, App.jsx vuelve a preguntar al servidor por el estado actual de la página. Esto permite que, si borras un libro en la página 1, el servidor "mueva" automáticamente el primer libro de la página 2 hacia arriba para rellenar el hueco, manteniendo siempre el límite de 12 libros por página.
+
+### 3. Redirección Automática de Seguridad
+Hemos añadido una "red de seguridad" en la función fetchAllBooks de App.jsx:
+```javascript
+// Si la página solicitada está vacía pero hay páginas anteriores, retrocedemos
+if (data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+    setCurrentPage(data.total_pages);
+    return;
+}
+```
+Si el servidor nos confirma que la página en la que estamos ya no existe (porque hemos borrado todo su contenido), la aplicación detecta el cambio y **teletransporta al usuario automáticamente** a la nueva última página con libros.
+
+### 4. Flujo de Comunicación (Props)
+Hemos reforzado el patrón de comunicación descendente:
+1. App.jsx define handleBookDeleted.
+2. Se la pasa a BookList.jsx.
+3. Este se la entrega a cada BookCard.jsx.
+Así, el "hijo" avisa al "padre" de que los datos han cambiado, y el padre se encarga de reordenar toda la habitación.
+
+**Puntos clave aprendidos:**
+- En aplicaciones con paginación, el servidor es siempre la **fuente de la verdad** para saber cuántas páginas existen.
+- Un borrado no es solo "quitar un elemento", es un evento que puede alterar toda la estructura de la navegación.
+- Programar "redes de seguridad" que comprueben si el estado actual sigue siendo válido evita que el usuario se encuentre con pantallas vacías o errores inesperados.
