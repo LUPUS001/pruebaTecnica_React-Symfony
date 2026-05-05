@@ -22,7 +22,7 @@ class BookType extends AbstractType
             ->add('author') // "" para el autor
 
             ->add('published', DateType::class, [ // Campo de fecha para la fecha de publicación
-                'widget' => 'single_text', 
+                'widget' => 'single_text',
                 /* Formato de fecha en una sola línea (ej: 2022-01-01) 
                    si no pusieramos single_text, nos aparecerian 3 campos (día, mes y año) en lugar de solo 1 campo de fecha 
                    y no podriamos enviar la fecha desde React, ya que Symfony y React usarian diferentes formatos de fecha
@@ -40,20 +40,29 @@ class BookType extends AbstractType
 
             ->add('image', FileType::class, [ // Campo de archivo para la imagen
                 'label' => 'Imagen (jpg, webp...)',
-                'mapped' => false, 
+                'mapped' => false,
                 /* Indicamos que no guarde la imagen en el objeto Book, ya que lo procesamos manualmente en el controlador 
                    para guardar la imagen en la ruta que indiquemos (public/images) y que la ruta se guarde en la tabla Image */
 
                 'required' => false, // No es obligatorio subir una imagen
                 'multiple' => true, // Permitimos subir múltiples imágenes a la vez (sin esto el navegador solo permitiría subir una imagen)
-                
+
                 'constraints' => [ // Restricciones para el archivo
                     new Assert\All([ // Aplicamos las restricciones a cada archivo subido (Assert\All coge la lista de imágenes y aplica las restricciones a cada una)
                         // básicamente le decimos valida cada una de las fotos, no solo la primera que se suba 
-                        new Assert\File (
+                        new Assert\File(
                             maxSize: '30000k', // 30MB
-                            extensions: ['webp', 'jpg', 'jpeg', 'png'],
-                            extensionsMessage: 'Por favor sube un formato de archivo valido (png, webp, jpg, jpeg)',
+                            mimeTypes: [
+                                'image/webp',
+                                'image/jpeg',
+                                'image/jpg',
+                                'image/png'
+                            ],
+                            mimeTypesMessage: 'Por favor sube un formato de archivo valido (png, webp, jpg, jpeg)',
+                            /* Usamos mimeTypes en lugar de extensions por SEGURIDAD. 
+                               Esto verifica el contenido real del archivo y no solo su nombre, evitando que suban archivos maliciosos disfrazados de imágenes. 
+                               como poner .webp a un archivo .exe, un ejecutable que contenga un virus   
+                            */
                         )
                     ])
                 ],
@@ -63,7 +72,7 @@ class BookType extends AbstractType
     }
 
     // Configuración de opciones del formulario
-    public function configureOptions(OptionsResolver $resolver): void 
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([ // Valores por defecto para el formulario
             'data_class' => Book::class, // Clase de la entidad que se está utilizando

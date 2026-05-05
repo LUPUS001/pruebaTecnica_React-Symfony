@@ -27,7 +27,8 @@ final class BookController extends AbstractController
     public function index(Request $request): Response
     {
         $page = $request->query->getInt('page', 1); // Página actual, por defecto 1
-        $limit = $request->query->getInt('limit', 12); // Libros por página, por defecto 12 (múltiplo de 2, 3, 4 para grid)
+        $limit = $request->query->getInt('limit', 12); // Libros por página, por defecto 12 
+        // Nota: Usamos 12 porque es múltiplo de 2, 3 y 4, lo que facilita el diseño Responsivo (grids de varias columnas).
         $offset = ($page - 1) * $limit; // Cálculo de dónde empezar a leer en la base de datos
 
         $repository = $this->em->getRepository(Book::class);
@@ -101,7 +102,7 @@ final class BookController extends AbstractController
                         $image->setBook($book); // Asociamos la imagen al libro
                         $this->em->persist($image); // Guardamos la imagen en la base de datos
                     } catch (\Exception $e) {
-                        // ya que catch esta vacío, php termina el try-catch y como estamos dentro de un foreach, pasa a la siguiente imagen (es como poner 'continue')
+                        return new JsonResponse(['errors' => ['Error al guardar la imagen: ' . $e->getMessage()]], 500); // si hay un error al guardar la imagen, devolvemos un error 500
                     }
                 }
             }
@@ -139,7 +140,7 @@ final class BookController extends AbstractController
         foreach ($bookDelete->getImages() as $image) {
             $filePath = $this->getParameter('kernel.project_dir') . '/public' . $image->getRutaArchivo();
             if (file_exists($filePath)) {
-                unlink($filePath); // Borramos el archivo físico
+                unlink($filePath); // Borramos el archivo físico del disco duro para no dejar "archivos basura"
             }
             $this->em->remove($image);
         }
@@ -215,17 +216,24 @@ final class BookController extends AbstractController
                     // Generamos un nombre único para cada imagen para evitar que choquen, ya que al subir una imagen esta "hereda como nombre" 
                     // el isbn del libro, si hay varias imágenes necesitamos el uniqid para que no tengan el mismo nombre y no se sobrescriban entre sí
                     $newFilename = ($book->getIsbn() ?: uniqid()) . '-' . uniqid() . '.' . $uploadedFile->guessExtension();
-                    $uploadedFile->move($destination, $newFilename);
 
-                    $image = new Image();
-                    $image->setRutaArchivo('/images/' . $newFilename); // Guardamos la ruta de la imagen 
-                    $image->setBook($book); // Asociamos la imagen al libro
-                    $this->em->persist($image);
+                    // Intentamos guardar la imagen en el directorio /public/images/
+                    try {
+                        $uploadedFile->move($destination, $newFilename); // move() mueve la imagen a la carpeta /public/images/
+
+                        $image = new Image(); // Creamos una nueva entidad Image en la base de datos (vinculada al libro)
+                        $image->setRutaArchivo('/images/' . $newFilename); // Guardamos la ruta de la imagen (puedes cambiar /images/ por /uploads/ o lo que quieras)
+                        $image->setBook($book); // Asociamos la imagen al libro
+                        $this->em->persist($image); // Guardamos la imagen en la base de datos
+                    } catch (\Exception $e) {
+                        // 500 es el código de error para errores del servidor. Informamos al usuario de que algo ha fallado.
+                        return new JsonResponse(['errors' => ['Error al guardar la imagen: ' . $e->getMessage()]], 500);
+                    }
                 }
             }
 
-            $this->em->flush();
-            return new JsonResponse($book->toArray());
+            $this->em->flush(); // Guardamos todos los cambios en la base de datos
+            return new JsonResponse($book->toArray()); // Devolvemos el libro en formato JSON
         }
 
         $errors = []; // Array para guardar los errores
@@ -323,31 +331,57 @@ final class BookController extends AbstractController
     }
 
     #[Route('/book/year/{year}', name: 'books_by_year', methods: ['GET'])]
-    public function books_by_year($year): Response
+    public function books_by_year($year, Request $request): Response
     {
-        $books = $this->em->getRepository(Book::class)->findYear($year); // Obtenemos los libros del año seleccionado  
+        $page = $request->query->getInt('page', 1); // Obtenemos el número de página (por defecto 1)
+        $limit = $request->query->getInt('limit', 12); // Obtenemos el número de libros por página (por defecto 12)
+        $offset = ($page - 1) * $limit; // Calculamos el desplazamiento (offset) para la consulta  
+
+        $books = $this->em->getRepository(Book::class)->findYear($year, $limit, $offset); // Obtenemos los libros del año seleccionado  
+        $total_books = $this->em->getRepository(Book::class)->countYear($year); // Obtenemos el total de libros del año seleccionado
+
         $data = []; // Array donde guardaremos los libros
 
         foreach ($books as $book) { // Recorremos todos los libros del año seleccionado
             $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
         }
 
-        return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
+        // Devolvemos un array JSON con los libros, el total de libros, la página actual, el límite y el total de páginas (paginación)
+        return new JsonResponse([
+            'books' => $data,
+            'total' => $total_books,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => ceil($total_books / $limit) ?: 1 // Ceil redondea hacia arriba para que no queden páginas vacías  
+        ]); // Devolvemos el array de libros en formato JSON
     }
 
     // Ruta para filtrar libros por categoría (llamada desde handleCategoryChange en React)
     #[Route('/book/category/{category}', name: 'category_book', methods: ['GET'])]
-    public function category_book($category): Response
+    public function category_book($category, Request $request): Response
     {
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 12);
+        $offset = ($page - 1) * $limit;
+
         // Normalizamos la categoría (Ej: "ficción" -> "Ficción") para asegurar que coincida con la DB
-        $books = $this->em->getRepository(Book::class)->findBy(['category' => ucfirst(strtolower($category))]);
+        // Esto garantiza que si el usuario escribe en minúsculas o mayúsculas, el sistema lo encuentre igualmente.
+        $normalizedCategory = ucfirst(strtolower($category));
+        $books = $this->em->getRepository(Book::class)->findBy(['category' => $normalizedCategory], ['id' => 'DESC'], $limit, $offset); // Obtenemos los libros de la categoría seleccionada 
+        $total_books = $this->em->getRepository(Book::class)->count(['category' => $normalizedCategory]); // Obtenemos el total de libros de la categoría seleccionada
         $data = [];
 
         foreach ($books as $book) {
             $data[] = $book->toArray();
         }
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'books' => $data,
+            'total' => $total_books,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => ceil($total_books / $limit) ?: 1
+        ]);
     }
     // Ahora en lugar de necesitar un webservice para cada categoría, hacemos todo este trabajo en un solo webservice 'category_book' 
 
@@ -426,19 +460,27 @@ final class BookController extends AbstractController
     #[Route('/book/search/{query}', name: 'search_books', methods: ['GET'])]
     // cuando el front pida algo que empiece por /book/search/ (ej: /book/search/Berserk) 
     // se ejecutará este método y la variable $query será 'Berserk' 
-    public function search_books($query): JsonResponse
+    public function search_books($query, Request $request): JsonResponse
     {
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 12);
+        $offset = ($page - 1) * $limit;
+
         // Usamos Query Builder no tener que escribir SQL a mano
-        $books = $this->em->getRepository(Book::class)->createQueryBuilder('b') // 'b' es un alias para la tabla de libros "Book"
+        $qb = $this->em->getRepository(Book::class)->createQueryBuilder('b') // 'b' es un alias para la tabla de libros "Book"
 
             ->where('b.title LIKE :query') // Buscamos por título
             ->orWhere('b.author LIKE :query') // O por autor
 
             // Añadimos '%' para que busque en cualquier parte del título o autor (con que empiece, termine o contenga la palabra o letra)
+            // Rationale: Al usar setParameter, Symfony escapa automáticamente el contenido, protegiendo contra Inyección SQL.
             ->setParameter('query', '%' . $query . '%')
+            ->orderBy('b.id', 'DESC');
 
-            ->getQuery() // Enviamos la consulta que hemos creado a la base de datos
-            ->getResult(); // Obtenemos el resultado
+        $totalQb = clone $qb;
+        $total_books = $totalQb->select('count(b.id)')->getQuery()->getSingleScalarResult();
+
+        $books = $qb->setMaxResults($limit)->setFirstResult($offset)->getQuery()->getResult(); // Obtenemos el resultado
 
         $results = []; // Array donde guardaremos los resultados (los libros encontrados)
 
@@ -446,6 +488,12 @@ final class BookController extends AbstractController
             $results[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $results
         }
 
-        return new JsonResponse($results); // Devolvemos el array de libros en formato JSON
+        return new JsonResponse([
+            'books' => $results,
+            'total' => $total_books,
+            'page' => $page,
+            'limit' => $limit,
+            'total_pages' => ceil($total_books / $limit) ?: 1
+        ]); // Devolvemos el array de libros en formato JSON
     }
 }

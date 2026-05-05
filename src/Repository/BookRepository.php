@@ -16,19 +16,48 @@ class BookRepository extends ServiceEntityRepository
         parent::__construct($registry, Book::class);
     }
 
-    public function findYear($year)
+    public function findYear($year, $limit = null, $offset = null) // limit y offset son para paginación
     {
-        return $this->getEntityManager()->createQuery('
-            SELECT book 
-            FROM App\Entity\Book book
-            WHERE book.published LIKE :fecha
-        ')
-            ->setParameter('fecha', $year . "%")
-            ->getResult();
+        // El QueryBuilder es la forma más segura y profesional de crear consultas en Symfony.
+        $qb = $this->createQueryBuilder('book')
+            ->where('book.published LIKE :fecha')
+            ->setParameter('fecha', $year . "%") 
+            // setParameter limpia el valor para evitar ataques de Inyección SQL.
+            // El símbolo % indica que busque cualquier fecha que "empiece" por ese año.
+            ->orderBy('book.id', 'DESC');
+
+        // Si no son null, aplicamos paginación
+        if ($limit !== null) {
+            $qb->setMaxResults($limit);
+        }
+
+        // OFFSET indica dónde empezar a leer los resultados (útil para saltar páginas)
+        if ($offset !== null) {
+            $qb->setFirstResult($offset);
+        }
+
+        // Ejecutamos la consulta y devolvemos los resultados
+        return $qb->getQuery()->getResult();
     }
 
+    // Contamos los libros de un año específico (sin paginación)
+    public function countYear($year)
+    {
+        return $this->createQueryBuilder('book')
+            ->select('count(book.id)')
+            ->where('book.published LIKE :fecha')
+            ->setParameter('fecha', $year . "%")
+            ->getQuery()
+            ->getSingleScalarResult(); // devuelve un solo resultado (en este caso, el conteo de libros) 
+    }
+
+    // Buscamos un libro por su ISBN y traemos su imagen (y la imagen se une al libro)
     public function findBookImagen($isbn)
     {
+        // Left Join: une la tabla Book con la tabla Image
+        // addSelect: selecciona los datos de la imagen para que los traiga junto con los del libro
+        // where: filtra por el ISBN que le pasamos
+        // getOneOrNullResult: devuelve un solo resultado (o null si no se encuentra)
         /* 
          ESTA ERA LA FORMA CON DQL (STRING):
          return $this->getEntityManager()->createQuery('
@@ -51,7 +80,7 @@ class BookRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
-//    /**
+    //    /**
 //     * @return Book[] Returns an array of Book objects
 //     */
 //    public function findByExampleField($value): array
@@ -66,7 +95,7 @@ class BookRepository extends ServiceEntityRepository
 //        ;
 //    } 
 
-//    public function findOneBySomeField($value): ?Book
+    //    public function findOneBySomeField($value): ?Book
 //    {
 //        return $this->createQueryBuilder('b')
 //            ->andWhere('b.exampleField = :val')

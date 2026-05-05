@@ -23,11 +23,29 @@ function App() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [limit] = useState(12); // 12 = número de libros por página
+    const [currentFilter, setCurrentFilter] = useState({ type: 'all', value: null });
+    // en lugar de usar peticiones HTTP para filtrar los libros, actualizamos el estado
+    // de esta manera, si hay un cambio en los datos, React lo detecta y actualiza la interfaz
 
     useEffect(() => {
-        fetchAllBooks(currentPage); // Carga la primera página de libros al cargar la app
-        checkUserSession(); // Comprobamos si hay sesión al cargar (si el usuario estaba logueado, se mantendrá logueado)
-    }, [currentPage]); // [] significa que se ejecutará solo una vez, al cargar la página
+        checkUserSession(); // Comprobamos si hay sesión al cargar
+    }, []);
+
+    useEffect(() => {
+        if (viewMode === 'mine') return;
+
+        if (currentFilter.type === 'all') {
+            fetchAllBooks(currentPage);
+        } else if (currentFilter.type === 'category') {
+            fetchCategoryBooks(currentFilter.value, currentPage);
+        } else if (currentFilter.type === 'year') {
+            fetchFindYear(currentFilter.value, currentPage);
+        } else if (currentFilter.type === 'search') {
+            executeSearch(currentFilter.value, currentPage);
+        }
+    }, [currentPage, currentFilter, viewMode]);
+    // ^ LISTA DE DEPENDENCIAS: Este array es vital. Le dice a React que si cualquiera de estos 
+    // valores cambia (página, filtro o modo de vista), debe volver a ejecutar este bloque para traer los datos correctos.
 
     const checkUserSession = async () => {
         try {
@@ -37,7 +55,7 @@ function App() {
                 setUser(data.user); // Guardamos el usuario en el estado 'user'
             }
         } catch (error) {
-            // Si falla o no hay sesión, el usuario sigue siendo null
+            console.error("Error comprobando sesión:", error);
         }
     };
 
@@ -50,7 +68,9 @@ function App() {
 
             // La API ahora devuelve un objeto { books, total_pages, ... }
             setBooks(data.books || []); // books = array de libros
-            setTotalPages(data.total_pages || 1); // total_pages = número total de páginas
+            setTotalPages(data.total_pages || 1);
+            // Usamos || 1 como "valor de seguridad". Si el servidor devuelve 0 páginas (porque no hay libros), 
+            // forzamos a que sea 1 para que el componente de paginación no dé error al renderizar.
             setViewMode("all"); // all = todos los libros
         } catch (error) {
             console.error(error);
@@ -94,12 +114,12 @@ function App() {
     }, []); // [] para que se ejecute solo una vez al cargar la app
 
     // Obtenemos los libros de un año concreto
-    const fetchFindYear = async (year) => {
+    const fetchFindYear = async (year, page = 1) => { // page = número de página (por defecto 1)
         try {
-            const response = await fetch(`/book/year/${year}`);
-            const data = await response.json();
-            setBooks(data);
-            setTotalPages(1); // 1 = solo una página de libros
+            const response = await fetch(`/book/year/${year}?page=${page}&limit=${limit}`); // Hacemos una petición a la ruta /book/year/{year} para obtener los libros del año seleccionado y el límite de libros por página
+            const data = await response.json(); // Convertimos la respuesta a JSON
+            setBooks(data.books || []); // books = array de libros
+            setTotalPages(data.total_pages || 1); // mostramos solo la primera página si no hay libros (al mostrar al menos 1 página la app no se rompera si total_pages = 0)
         } catch (error) {
             console.error(error);
         }
@@ -109,68 +129,75 @@ function App() {
 
 
     // Función para obtener los libros filtrados por una categoría específica
-    const fetchCategoryBooks = async (category) => {
+    const fetchCategoryBooks = async (category, page = 1) => {
         try {
-            const response = await fetch(`/book/category/${category}`);
+            const response = await fetch(`/book/category/${category}?page=${page}&limit=${limit}`);
             const data = await response.json();
-            setBooks(data);
-            setTotalPages(1); // 1 = solo una página de libros
+            setBooks(data.books || []);
+            setTotalPages(data.total_pages || 1);
         } catch (error) {
             console.error(error);
         }
     };
 
-
-
-    const handleCategoryChange = (e) => {
-        const category = e.target.value; // e.target.value es el valor que se selecciona en el menú desplegable (por ejemplo, "Fantasía", "Ciencia Ficción", etc.)
-
-        if (category === "all") { // Si el usuario selecciona "all", llamamos a la función fetchAllBooks para que muestre todos los libros
-            // Al cambiar de filtro, siempre reseteamos a la página 1 para evitar quedarnos en una página 
-            // inexistente (ej: si estábamos en la pág 10 y el nuevo filtro solo tiene 1 página).
-            setCurrentPage(1); // volvemos a la primera página visualmente
-            fetchAllBooks(1); // pedimos al servidor los libros de la primera página
-        } else { // Si el usuario no selecciona "all", llamamos a la función fetchCategoryBooks con el valor de category ("Fantasía", etc.)
-            fetchCategoryBooks(category); // y nos devuelve los libros de esa categoría
-        }
-    };
-
-
-
-    const handleYearChange = (e) => {
-        const yearSelected = e.target.value;
-        if (yearSelected === "all") {
-            // Reseteamos a la página 1 por seguridad para asegurar que siempre haya resultados visibles
-            setCurrentPage(1); // Volvemos a la primera página
-            fetchAllBooks(1); // Obtenemos todos los libros de la primera página
-        } else {
-            fetchFindYear(yearSelected);
-        }
-    };
-
-    const handleSearch = async (e) => {
-        const query = e.target.value;
-        setSearchQuery(query);
-
-        // Si el buscador se queda vacío (o solo tiene espacios), reseteamos la vista al catálogo completo
-        if (query.trim() === "") {
-            setCurrentPage(1); // Reseteamos a la página 1
-            fetchAllBooks(1); // Volvemos a cargar el catálogo completo desde el principio
-            return; // Salimos de la función para evitar hacer una petición de búsqueda vacía al servidor
-        }
-
+    // Función que ejecuta la búsqueda de un libro por título o autor 
+    const executeSearch = async (query, page = 1) => {
         try {
-            const response = await fetch(`/book/search/${query}`);
+            const response = await fetch(`/book/search/${query}?page=${page}&limit=${limit}`);
             if (response.ok) {
                 const data = await response.json();
-                setBooks(data);
-                setTotalPages(1); // 1 = Escondemos la paginación al buscar un libro específico (solo queremos que se vean los resultados de la búsqueda)
-                // esconderemos la paginación gracias a lo que hemos configurado en Pagination.jsx (if (totalPages <= 1) return null; // No mostramos nada si solo hay una página)
-                setViewMode("all");
+                setBooks(data.books || []);
+                setTotalPages(data.total_pages || 1);
             }
         } catch (error) {
             console.error("Error en la búsqueda:", error);
         }
+    };
+
+    const handleCategoryChange = (e) => {
+        const category = e.target.value;
+        setCurrentPage(1); // Reseteamos la página a la primera
+        // Si estabas en la página 5 de "Ficción" y cambias a "Terror", no puedes seguir en la página 5 porque quizás "Terror" solo tiene 2 páginas. 
+        // Siempre reiniciamos al principio al cambiar el filtro.
+        setViewMode("all"); // all = todos los libros  |  Nos asegura que el usuario vea el catálogo global y no se quede atrapado en la vista de "Mis Libros".
+        if (category === "all") { // Si la categoría es "all", mostramos todos los libros 
+            setCurrentFilter({ type: 'all', value: null }); // type = tipo de filtro, value = valor del filtro  | Resetear el filtro a "null" significa que le 
+            //                                                                                                                                                                                                        // estamos diciendo a la aplicación: "Quiero ver todo, sin filtros".
+        } else { // Si la categoría es diferente de "all", mostramos los libros de la categoría seleccionada
+            setCurrentFilter({ type: 'category', value: category }); // type = tipo de filtro, value = valor del filtro  
+        }
+    };
+
+    const handleYearChange = (e) => {
+        const yearSelected = e.target.value;
+        setCurrentPage(1);
+        setViewMode("all");
+        if (yearSelected === "all") {
+            setCurrentFilter({ type: 'all', value: null });
+        } else {
+            setCurrentFilter({ type: 'year', value: yearSelected });
+        }
+    };
+
+
+    // Maneja la búsqueda de un libro por título o autor 
+    const handleSearch = (e) => {
+        // ya no usa async ni await para obtener los libros (antes los obtenía desde el backend con fetch), 
+        // sino que los obtiene directamente desde el backend con executeSearch a través del useEffect.
+        // Nota: En apps reales aquí se usaría "Debouncing" para no saturar el servidor con cada letra escrita.
+        const query = e.target.value; // query = lo que escribe el usuario en el buscador
+        setSearchQuery(query); // setSearchQuery = actualiza el estado searchQuery con lo que escribe el usuario en el buscador
+
+        if (query.trim() === "") { // trim() elimina los espacios en blanco del principio y del final 
+            setCurrentPage(1);
+            setViewMode("all");
+            setCurrentFilter({ type: 'all', value: null });
+            return;
+        }
+
+        setCurrentPage(1);
+        setViewMode("all");
+        setCurrentFilter({ type: 'search', value: query }); // search = búsqueda por título o autor, query = lo que escribe el usuario en el buscador 
     };
 
     return (
@@ -224,18 +251,44 @@ function App() {
                     className="search-input"
                 />
 
-                <button onClick={() => fetchAllBooks(1)} className="filter-button secondary">
+                <button
+                    onClick={() => {
+                        // Al pulsar "Todos los libros", debemos "resetear el cerebro" de la aplicación.
+                        // Si no limpiamos currentFilter, la paginación seguiría recordando el filtro anterior (ej: "Dark fantasy").
+                        setCurrentPage(1); // Volvemos a la página 1
+                        setViewMode("all"); // Nos aseguramos de estar en el catálogo global
+                        setCurrentFilter({ type: 'all', value: null }); // Le decimos al cerebro: "Quiero verlo todo"
+                        setSearchQuery(""); // Limpiamos también el buscador si hubiera algo escrito
+                    }}
+                    className="filter-button secondary"
+                >
                     Todos los libros
                 </button>
 
-                <select onChange={handleCategoryChange} className="filter-select">
+                <select
+                    onChange={handleCategoryChange}
+                    className="filter-select"
+                    /* COMPONENTE CONTROLADO:
+                       Enlazamos visualmente este desplegable a lo que dicte el "cerebro" (currentFilter).
+                       Si el cerebro dice que el filtro actual es 'category', mostramos su valor.
+                       Si el cerebro dice 'all' (porque pulsamos Todos los libros), forzamos visualmente a "all".
+                       Esto evita que el desplegable se quede "atascado" mostrando una categoría antigua.
+                    */
+                    value={currentFilter.type === 'category' ? currentFilter.value : "all"}
+                >
                     <option value="all">Todas las categorías</option>
                     {allCategories.map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>
                     ))}
                 </select>
 
-                <select onChange={handleYearChange} className="year-select">
+                <select
+                    onChange={handleYearChange}
+                    className="year-select"
+                    /* COMPONENTE CONTROLADO: Igual que en categorías, forzamos que la vista
+                       coincida exactamente con el estado interno de la aplicación. */
+                    value={currentFilter.type === 'year' ? currentFilter.value : "all"}
+                >
                     <option value="all">Todos los años</option>
                     {allYears.map((yearSelected) => (
                         <option key={yearSelected} value={yearSelected}>{yearSelected}</option>
@@ -253,7 +306,16 @@ function App() {
                             fetchFilters(); // Recargamos categorías/años por si se importan nuevas
                         }} />
                         <button
-                            onClick={() => viewMode === "all" ? fetchMyBooks() : fetchAllBooks(1)}
+                            onClick={() => {
+                                // Si el usuario está en "all", mostramos sus libros, si está en "mine", mostramos todos los libros
+                                if (viewMode === "all") {
+                                    fetchMyBooks(); // Si estamos en "all", recargamos solo los libros del usuario
+                                } else { // Si el usuario está en "mine", lo enviamos a "all" y reseteamos todo
+                                    setViewMode("all"); // Reseteamos el modo de vista
+                                    setCurrentPage(1); // Reseteamos la página a 1
+                                    setCurrentFilter({ type: 'all', value: null }); // Reseteamos los filtros 
+                                }
+                            }}
                             className={`view-mode-button ${viewMode === "mine" ? "active" : "inactive"}`}
                         >
                             {viewMode === "all" ? "Mis Libros" : "Catálogo Global"}

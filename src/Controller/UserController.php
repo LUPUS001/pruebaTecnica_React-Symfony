@@ -15,7 +15,8 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 final class UserController extends AbstractController
 {
     private $em;
-    public function __construct(EntityManagerInterface $em) {
+    public function __construct(EntityManagerInterface $em)
+    {
         $this->em = $em;
     }
 
@@ -25,8 +26,8 @@ final class UserController extends AbstractController
         $user = new User();
         $registration_form = $this->createForm(UserType::class, $user);
         $registration_form->handleRequest($request);
-        
-        if ($registration_form->isSubmitted() && $registration_form->isValid()) { 
+
+        if ($registration_form->isSubmitted() && $registration_form->isValid()) {
             // Manejo de la foto de perfil
             $photoFile = $registration_form->get('photo')->getData(); // Obtenemos el archivo de la imagen
             if ($photoFile) {
@@ -37,7 +38,9 @@ final class UserController extends AbstractController
                     $photoFile->move($destination, $newFilename); // Movemos el archivo a la carpeta uploads/profiles
                     $user->setPhoto('/uploads/profiles/' . $newFilename); // Guardamos la ruta de la imagen en la base de datos
                 } catch (\Exception $e) {
-                    // Si falla la subida, simplemente no guardamos la foto
+                    // Si hay un error al guardar la imagen, mostramos un mensaje de error y redirigimos al usuario a la página de registro
+                    $this->addFlash('error', 'Hubo un problema guardando tu foto de perfil: ' . $e->getMessage());
+                    return $this->redirectToRoute('user_registration');
                 }
             }
 
@@ -48,20 +51,15 @@ final class UserController extends AbstractController
             );
             $user->setPassword($contrasenaHasheada);
             $user->setRoles(['ROLE_USER']);
-        
+
             $this->em->persist($user);
             $this->em->flush();
             return $this->redirectToRoute('app_login'); // Redirigimos al login tras el éxito
-        };
+        }
+        ;
         return $this->render('user/index.html.twig', [
             'registration_form' => $registration_form->createView(),
         ]);
     }
 
-    #[Route('/user/update', name: 'update_user')]
-    public function update(): Response
-    {
-        $user = $this->em->getRepository(User::class)->find(2);
-        return new JsonResponse(['success' => true, 'message' => 'Rol actualizado']);
-    }
 }

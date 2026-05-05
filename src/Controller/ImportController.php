@@ -11,9 +11,13 @@ use Symfony\Component\Routing\Attribute\Route;
 
 class ImportController extends AbstractController
 {
-    #[Route('/import-books', name: 'import_books', methods: ['GET'])]
+    #[Route('/import-books', name: 'import_books', methods: ['POST'])] 
+    // IMPORTANTE: Cambiado a POST para evitar que se ejecute al entrar por URL (GET).
+    // Esto previene que alguien borre la base de datos accidentalmente solo por seguir un enlace.
     public function import(EntityManagerInterface $entityManager): Response
     {
+        $this->denyAccessUnlessGranted('ROLE_ADMIN', null, 'No tienes permiso para realizar esta acción.'); // Si no eres admin, no puedes importar
+
         // 1. Localizamos el archivo en la carpeta public 
         $jsonFile = $this->getParameter('kernel.project_dir') . '/public/books.json';
 
@@ -40,7 +44,7 @@ class ImportController extends AbstractController
             $book->setCategory($data['category']);
             $book->setAuthor($data['author']);
             $book->setPublisher($data['publisher']);
-            $book->setPages((int)$data['pages']); // Forzamos a entero por seguridad
+            $book->setPages((int) $data['pages']); // Forzamos a entero por seguridad
             $book->setDescription($data['description']);
 
             // Campos opcionales (usamos ?? null para evitar errores si no vienen en el JSON) 
@@ -64,16 +68,16 @@ class ImportController extends AbstractController
                 // Si no hay local, usamos Open Library
                 $image->setRutaArchivo("https://covers.openlibrary.org/b/isbn/{$isbn}-L.jpg");
             }
-            
+
             $image->setBook($book);
 
 
-            $entityManager->persist($book); 
+            $entityManager->persist($book);
             $entityManager->persist($image);
         }
 
         $entityManager->flush();
 
-        return new Response("Importación finalizada. Revisa phpMyAdmin"); 
+        return new Response("Importación finalizada. Revisa phpMyAdmin");
     }
 }
