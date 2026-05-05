@@ -49,9 +49,10 @@ body {
 
 .app-top-bar h1 {
     margin: 0;
-    font-size: 2em;
-    font-weight: 700;
-    background: linear-gradient(135deg, #2c3e50, #000);
+    font-size: 2.8em;
+    font-weight: 800;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #1e293b, #4338ca);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -105,13 +106,17 @@ body {
 }
 
 .selected-book-info h2 {
-    margin: 0 0 10px 0;
-    font-size: 1.4em;
+    margin: 0 0 15px 0;
+    font-size: 2.2em;
+    font-weight: 700;
+    color: #1e293b;
 }
 
 .selected-book-info p {
-    margin: 5px 0;
-    font-size: 0.95em;
+    margin: 8px 0;
+    font-size: 1.1em;
+    color: #475569;
+    line-height: 1.5;
 }
 
 
@@ -261,12 +266,10 @@ section {
 
 /* Contenedor de la imagen del libro seleccionado */
 .selected-book-image-container {
-    width: 120px;
-    height: 180px;
-    /* Altura fija para el carrusel en el header */
-    margin-right: 20px;
+    width: 180px;
+    height: 260px;
+    margin-right: 35px;
     flex-shrink: 0;
-    /* Evita que el contenedor se encoja si no hay espacio o que si hay mucho texto se haga gigante */
 }
 
 .book-card-image-container {
@@ -485,8 +488,8 @@ section {
 }
 
 .search-input {
-    width: 450px;
-    height: 48px;
+    width: 380px;
+    height: 52px;
     padding: 0 25px;
     border: 2px solid #e0e0e0;
     border-radius: 25px;
@@ -725,13 +728,24 @@ section {
 }
 
 .pagination-container .filter-button {
-    min-width: 40px;
-    height: 40px;
+    min-width: 50px;
+    height: 50px;
+    font-size: 1.1em;
+    font-weight: 600;
+    border-radius: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
+    padding: 0 15px;
     margin-bottom: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pagination-container .filter-button.active {
+    background: var(--primary) !important;
+    color: white !important;
+    transform: scale(1.1);
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
 }
 
 .pagination-container button:disabled {
