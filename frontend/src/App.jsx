@@ -69,7 +69,7 @@ function App() {
             }
             
             setBooks(data.books || []);
-            setTotalPages(data.total_pages || 1);
+            setTotalPages(data.total_pages || data.totalPages || 1);
             setViewMode("all");
         } catch (error) {
             console.error(error);
@@ -136,7 +136,7 @@ function App() {
             }
 
             setBooks(data.books || []);
-            setTotalPages(data.total_pages || 1);
+            setTotalPages(data.total_pages || data.totalPages || 1);
         } catch (error) {
             console.error(error);
         }
@@ -153,7 +153,7 @@ function App() {
             }
 
             setBooks(data.books || []);
-            setTotalPages(data.total_pages || 1);
+            setTotalPages(data.total_pages || data.totalPages || 1);
         } catch (error) {
             console.error(error);
         }
@@ -193,7 +193,7 @@ function App() {
                 }
 
                 setBooks(data.books || []);
-                setTotalPages(data.total_pages || 1);
+                setTotalPages(data.total_pages || data.totalPages || 1);
             }
         } catch (error) {
             console.error("Error en la búsqueda:", error);
