@@ -19,11 +19,17 @@ function BookCard(props) {
 
             // Si la petición es exitosa, eliminamos el libro de la lista
             if (response.ok) {
-                // Actualizamos el estado books con el nuevo libro
+                // Actualizamos el estado books localmente para feedback instantáneo
                 setBooks((prevBooks) =>
                     // Filtramos los libros y nos quedamos con todos menos el que hemos eliminado
                     prevBooks.filter((b) => b.isbn !== book.isbn),
                 );
+
+                // Notificamos al componente padre (App) para que refresque la paginación y los filtros
+                if (props.onBookDeleted) {
+                    props.onBookDeleted();
+                }
+
                 console.log("Libro eliminado con éxito");
             } else {
                 const errorData = await response.json(); // Convertimos la respuesta a JSON

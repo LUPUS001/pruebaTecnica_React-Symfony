@@ -22,11 +22,25 @@ function App() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [limit] = useState(12);
+    const [currentFilter, setCurrentFilter] = useState({ type: 'all', value: null });
 
     useEffect(() => {
-        fetchAllBooks(currentPage);
-        checkUserSession(); // Comprobamos si hay sesión al cargar (si el usuario estaba logueado, se mantendrá logueado)
-    }, [currentPage]); // [] significa que se ejecutará solo una vez, al cargar la página, mas currentPage
+        if (viewMode === 'mine') return;
+
+        if (currentFilter.type === 'all') {
+            fetchAllBooks(currentPage);
+        } else if (currentFilter.type === 'category') {
+            fetchCategoryBooks(currentFilter.value, currentPage);
+        } else if (currentFilter.type === 'year') {
+            fetchFindYear(currentFilter.value, currentPage);
+        } else if (currentFilter.type === 'search') {
+            executeSearch(currentFilter.value, currentPage);
+        }
+    }, [currentPage, currentFilter, viewMode]);
+
+    useEffect(() => {
+        checkUserSession(); // Comprobamos si hay sesión al cargar
+    }, []);
 
     const checkUserSession = async () => {
         try {
@@ -47,12 +61,16 @@ function App() {
     const fetchAllBooks = async (page = 1) => {
         try {
             const response = await fetch(`/books?page=${page}&limit=${limit}`);
-            const result = await response.json();
+            const data = await response.json();
+
+            if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                setCurrentPage(data.total_pages);
+                return;
+            }
             
-            // La API ahora devuelve un objeto { books, total, page, totalPages }
-            setBooks(result.books || []);
-            setTotalPages(result.totalPages || 1);
-            setViewMode("all"); // all = todos los libros
+            setBooks(data.books || []);
+            setTotalPages(data.total_pages || 1);
+            setViewMode("all");
         } catch (error) {
             console.error(error);
         }
@@ -107,23 +125,35 @@ function App() {
         fetchFilters();
     }, []);
 
-    const fetchFindYear = async (year) => {
+    const fetchFindYear = async (year, page = 1) => {
         try {
-            const response = await fetch(`/book/year/${year}`);
+            const response = await fetch(`/book/year/${year}?page=${page}&limit=${limit}`);
             const data = await response.json();
-            setBooks(data);
-            setTotalPages(1); // Desactivamos paginación al filtrar por año/categoría (por ahora)
+
+            if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                setCurrentPage(data.total_pages);
+                return;
+            }
+
+            setBooks(data.books || []);
+            setTotalPages(data.total_pages || 1);
         } catch (error) {
             console.error(error);
         }
     };
 
-    const fetchCategoryBooks = async (category) => {
+    const fetchCategoryBooks = async (category, page = 1) => {
         try {
-            const response = await fetch(`/book/category/${category}`);
+            const response = await fetch(`/book/category/${category}?page=${page}&limit=${limit}`);
             const data = await response.json();
-            setBooks(data);
-            setTotalPages(1);
+
+            if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                setCurrentPage(data.total_pages);
+                return;
+            }
+
+            setBooks(data.books || []);
+            setTotalPages(data.total_pages || 1);
         } catch (error) {
             console.error(error);
         }
@@ -131,43 +161,72 @@ function App() {
 
     const handleCategoryChange = (e) => {
         const category = e.target.value;
+        setCurrentPage(1);
+        setViewMode("all");
         if (category === "all") {
-            setCurrentPage(1);
-            fetchAllBooks(1);
+            setCurrentFilter({ type: 'all', value: null });
         } else {
-            fetchCategoryBooks(category);
+            setCurrentFilter({ type: 'category', value: category });
         }
     };
 
     const handleYearChange = (e) => {
         const yearSelected = e.target.value;
+        setCurrentPage(1);
+        setViewMode("all");
         if (yearSelected === "all") {
-            setCurrentPage(1);
-            fetchAllBooks(1);
+            setCurrentFilter({ type: 'all', value: null });
         } else {
-            fetchFindYear(yearSelected);
+            setCurrentFilter({ type: 'year', value: yearSelected });
         }
     };
 
-    const handleSearch = async (e) => {
-        const query = e.target.value;
-        setSearchQuery(query);
-
-        if (query.trim() === "") {
-            fetchAllBooks();
-            return;
-        }
-
+    const executeSearch = async (query, page = 1) => {
         try {
-            const response = await fetch(`/book/search/${query}`);
+            const response = await fetch(`/book/search/${query}?page=${page}&limit=${limit}`);
             if (response.ok) {
                 const data = await response.json();
-                setBooks(data);
-                setViewMode("all");
+
+                if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                    setCurrentPage(data.total_pages);
+                    return;
+                }
+
+                setBooks(data.books || []);
+                setTotalPages(data.total_pages || 1);
             }
         } catch (error) {
             console.error("Error en la búsqueda:", error);
         }
+    };
+
+    const handleSearch = (e) => {
+        const query = e.target.value;
+        setSearchQuery(query);
+
+        if (query.trim() === "") {
+            setCurrentPage(1);
+            setViewMode("all");
+            setCurrentFilter({ type: 'all', value: null });
+            return;
+        }
+
+        setCurrentPage(1);
+        setViewMode("all");
+        setCurrentFilter({ type: 'search', value: query });
+    };
+
+    const handleBookDeleted = () => {
+        if (viewMode === "mine") {
+            fetchMyBooks();
+        } else {
+            if (currentFilter.type === 'all') fetchAllBooks(currentPage);
+            else if (currentFilter.type === 'category') fetchCategoryBooks(currentFilter.value, currentPage);
+            else if (currentFilter.type === 'year') fetchFindYear(currentFilter.value, currentPage);
+            else if (currentFilter.type === 'search') executeSearch(currentFilter.value, currentPage);
+        }
+        // fetchFilters() se dispara solo si usamos el nuevo endpoint, 
+        // pero en esta rama mantenemos tu lógica de filtros manual por ahora para no romper la purpurina.
     };
 
     return (
@@ -255,8 +314,9 @@ function App() {
                 books={books}
                 setSelectedBook={setSelectedBook}
                 setBooks={setBooks}
-                user={user} // pasamos el usuario a BookList para que le muestre los botones de editar y borrar si es el dueño o admin
-                onEdit={(book) => setEditingBook(book)} // pasamos la función onEdit a BookList para que pueda editar los libros
+                user={user}
+                onEdit={(book) => setEditingBook(book)}
+                onBookDeleted={handleBookDeleted}
             ></BookList>
 
             <Pagination 
