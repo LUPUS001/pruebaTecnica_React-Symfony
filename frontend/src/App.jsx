@@ -66,6 +66,12 @@ function App() {
             const response = await fetch(`/books?page=${page}&limit=${limit}`); // Petición al servidor enviando la página solicitada y el límite de libros por página
             const data = await response.json(); // Convertimos la respuesta a JSON
 
+            // Si el usuario borra el último libro de una página, retrocedemos automáticamente
+            if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                setCurrentPage(data.total_pages);
+                return;
+            }
+
             // La API ahora devuelve un objeto { books, total_pages, ... }
             setBooks(data.books || []); // books = array de libros
             setTotalPages(data.total_pages || 1);
@@ -118,6 +124,12 @@ function App() {
         try {
             const response = await fetch(`/book/year/${year}?page=${page}&limit=${limit}`); // Hacemos una petición a la ruta /book/year/{year} para obtener los libros del año seleccionado y el límite de libros por página
             const data = await response.json(); // Convertimos la respuesta a JSON
+            
+            if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                setCurrentPage(data.total_pages);
+                return;
+            }
+
             setBooks(data.books || []); // books = array de libros
             setTotalPages(data.total_pages || 1); // mostramos solo la primera página si no hay libros (al mostrar al menos 1 página la app no se rompera si total_pages = 0)
         } catch (error) {
@@ -133,6 +145,12 @@ function App() {
         try {
             const response = await fetch(`/book/category/${category}?page=${page}&limit=${limit}`);
             const data = await response.json();
+
+            if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                setCurrentPage(data.total_pages);
+                return;
+            }
+
             setBooks(data.books || []);
             setTotalPages(data.total_pages || 1);
         } catch (error) {
@@ -146,6 +164,12 @@ function App() {
             const response = await fetch(`/book/search/${query}?page=${page}&limit=${limit}`);
             if (response.ok) {
                 const data = await response.json();
+
+                if (data.books && data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+                    setCurrentPage(data.total_pages);
+                    return;
+                }
+
                 setBooks(data.books || []);
                 setTotalPages(data.total_pages || 1);
             }
@@ -198,6 +222,24 @@ function App() {
         setCurrentPage(1);
         setViewMode("all");
         setCurrentFilter({ type: 'search', value: query }); // search = búsqueda por título o autor, query = lo que escribe el usuario en el buscador 
+    };
+
+    /**
+     * handleBookDeleted
+     * Función que se dispara cuando un libro es eliminado con éxito.
+     * Refresca la vista actual según el filtro que tengamos puesto.
+     */
+    const handleBookDeleted = () => {
+        if (viewMode === "mine") {
+            fetchMyBooks();
+        } else {
+            // Refrescamos según el filtro activo para no perder la posición
+            if (currentFilter.type === 'all') fetchAllBooks(currentPage);
+            else if (currentFilter.type === 'category') fetchCategoryBooks(currentFilter.value, currentPage);
+            else if (currentFilter.type === 'year') fetchFindYear(currentFilter.value, currentPage);
+            else if (currentFilter.type === 'search') executeSearch(currentFilter.value, currentPage);
+        }
+        fetchFilters(); // Por si se ha borrado el último libro de una categoría
     };
 
     return (
@@ -374,6 +416,7 @@ function App() {
                 fetchFilters={fetchFilters} // Pasamos la función para recargar filtros tras eliminar
                 user={user} // pasamos el usuario a BookList para que le muestre los botones de editar y borrar si es el dueño o admin
                 onEdit={(book) => setEditingBook(book)} // pasamos la función onEdit a BookList para que pueda editar los libros
+                onBookDeleted={handleBookDeleted} // Callback para notificar cambios globales tras un borrado
             ></BookList>
 
             {/* Modal de edición */}

@@ -19,18 +19,20 @@ function BookCard(props) {
 
             // Si la petición es exitosa, eliminamos el libro de la lista
             if (response.ok) {
-                // Actualizamos el estado books con el nuevo libro
+                // Actualizamos el estado books localmente para feedback instantáneo
                 setBooks((prevBooks) =>
                     // Filtramos los libros y nos quedamos con todos menos el que hemos eliminado
                     prevBooks.filter((b) => b.isbn !== book.isbn),
                 );
 
-                // Verificamos si la función existe para evitar que la app explote (TypeError).
-                // Si existe, la ejecutamos para refrescar la lista y los filtros del menú lateral, 
-                // asegurando que las categorías se actualicen tras el borrado.
-                if (props.fetchFilters) {
-                    props.fetchFilters(); // Recargamos filtros tras eliminar (*1)
+                // Notificamos al componente padre (App) para que refresque la paginación y los filtros
+                if (props.onBookDeleted) {
+                    props.onBookDeleted();
+                } else if (props.fetchFilters) {
+                    // Fallback de seguridad
+                    props.fetchFilters();
                 }
+
                 console.log("Libro eliminado con éxito");
             } else {
                 const errorData = await response.json(); // Convertimos la respuesta a JSON

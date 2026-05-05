@@ -399,3 +399,30 @@ Con esto, si el cerebro (estado) cambia a `"all"`, la casilla está obligada a c
 - **Single Source of Truth (Única Fuente de la Verdad)**: Nunca intentes actualizar la vista haciendo un `fetch` directo si tienes un `useEffect` escuchando un estado. Actualiza el estado y deja que React haga el resto.
 - **Componentes Controlados**: Los elementos de formulario en React siempre deben tener un `value` atado a un estado para que no se desincronicen visualmente.
 - **El Peligro de Manipular Arrays**: En aplicaciones paginadas u ordenadas desde el servidor, evitar insertar elementos "a mano" en el array de React (`[...prev]`). Es mucho más seguro forzar una recarga de los primeros elementos desde la API para garantizar el orden correcto.
+
+---
+
+## 🗑️ Paso 14: Paginación Robusta en el Borrado
+
+Para finalizar, hemos solucionado el bug que dejaba la pantalla vacía si borrábamos el último libro de una página.
+
+### 1. El Problema de la "Página Fantasma"
+**El Bug:** Si estabas en la página 3 y borrabas su único libro, la app seguía pidiendo la página 3 al servidor, pero como ya no existía, la pantalla se quedaba en blanco.
+
+### 2. La Solución (Redirección Automática)
+Hemos añadido una comprobación en las funciones que cargan los libros (`fetchAllBooks`, `fetchCategoryBooks`, etc.). Si el servidor nos dice que la página está vacía pero hay páginas anteriores, retrocedemos automáticamente:
+
+```javascript
+if (data.books.length === 0 && data.total_pages > 0 && page > data.total_pages) {
+    setCurrentPage(data.total_pages);
+    return;
+}
+```
+
+### 3. Sincronización con `handleBookDeleted`
+Hemos centralizado el refresco tras un borrado en una función `handleBookDeleted` en `App.jsx`. Esta función:
+1. Detecta si estamos en el catálogo o en "Mis Libros".
+2. Vuelve a pedir los datos al servidor para que la lista se reordene correctamente.
+3. Actualiza los filtros lateralmente por si una categoría se ha quedado vacía.
+
+**Punto clave**: Al trabajar con paginación, el servidor manda. Siempre debemos sincronizar la interfaz con lo que diga el backend tras realizar operaciones que cambien el número de elementos.

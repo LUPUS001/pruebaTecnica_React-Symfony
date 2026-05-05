@@ -1,7 +1,7 @@
 import BookCard from "./BookCard";
 
 function BookList(props) {
-    const { books, setSelectedBook, setBooks, user, onEdit } = props;
+    const { books, setSelectedBook, setBooks, user, onEdit, onBookDeleted } = props;
 
     const bookCard = books.map((book, index) => {
         return (
@@ -16,6 +16,7 @@ function BookList(props) {
                 fetchFilters={props.fetchFilters}
                 user={user} // La información de quién esta logueado
                 onEdit={onEdit} // La función que permite editar el libro, la que abre el modal/formulario de edición
+                onBookDeleted={onBookDeleted} // Callback para notificar cambios globales tras un borrado
             ></BookCard>
         );
     });
