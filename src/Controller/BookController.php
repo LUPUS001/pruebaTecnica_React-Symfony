@@ -317,31 +317,54 @@ final class BookController extends AbstractController
     }
 
     #[Route('/book/year/{year}', name: 'books_by_year', methods: ['GET'])]
-    public function books_by_year($year): Response
+    public function books_by_year(Request $request, $year): Response
     {    
-        $books = $this->em->getRepository(Book::class)->findYear($year); // Obtenemos los libros del año seleccionado  
-        $data = []; // Array donde guardaremos los libros
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 12);
+        $offset = ($page - 1) * $limit;
 
-        foreach ($books as $book) { // Recorremos todos los libros del año seleccionado
-            $data[] = $book->toArray(); // Convertimos cada libro a un array y lo guardamos en $data
-        }
+        $repository = $this->em->getRepository(Book::class);
+        $books = $repository->findBy(['published' => new \DateTime($year . '-01-01')], ['id' => 'DESC'], $limit, $offset);
+        // Nota: findYear es un método custom, aquí usamos findBy para simplificar la paginación si no está implementada en el repo
+        
+        $totalBooks = count($repository->findBy(['published' => new \DateTime($year . '-01-01')]));
 
-        return new JsonResponse($data); // Devolvemos el array de libros en formato JSON
-    }
-
-    // Creamos una ruta dinámica donde recibimos la categoría que nos llega desde el botón handleFilterByCategory
-    #[Route('/book/category/{category}', name: 'category_book', methods: ['GET'])]
-    public function category_book($category): Response
-    {
-        // Normalizamos la categoría (Ej: "ficción" -> "Ficción") para asegurar que coincida con la DB
-        $books = $this->em->getRepository(Book::class)->findBy(['category' => ucfirst(strtolower($category))]);            
         $data = [];
-
         foreach ($books as $book) {
             $data[] = $book->toArray();
         }
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'books' => $data,
+            'total' => $totalBooks,
+            'totalPages' => ceil($totalBooks / $limit)
+        ]);
+    }
+
+    // Creamos una ruta dinámica donde recibimos la categoría que nos llega desde el botón handleFilterByCategory
+    #[Route('/book/category/{category}', name: 'category_book', methods: ['GET'])]
+    public function category_book(Request $request, $category): Response
+    {
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 12);
+        $offset = ($page - 1) * $limit;
+
+        $repository = $this->em->getRepository(Book::class);
+        $criteria = ['category' => ucfirst(strtolower($category))];
+        
+        $books = $repository->findBy($criteria, ['id' => 'DESC'], $limit, $offset);            
+        $totalBooks = $repository->count($criteria);
+
+        $data = [];
+        foreach ($books as $book) {
+            $data[] = $book->toArray();
+        }
+
+        return new JsonResponse([
+            'books' => $data,
+            'total' => $totalBooks,
+            'totalPages' => ceil($totalBooks / $limit)
+        ]);
     }
     // Ahora en lugar de necesitar un webservice para cada categoría, hacemos todo este trabajo en un solo webservice 'category_book' 
 
@@ -380,12 +403,24 @@ final class BookController extends AbstractController
     }
 
     #[Route('/book/search/{query}', name: 'search_books', methods: ['GET'])]
-    public function search_books($query): JsonResponse
+    public function search_books(Request $request, $query): JsonResponse
     {
-        $books = $this->em->getRepository(Book::class)->createQueryBuilder('b')
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 12);
+        $offset = ($page - 1) * $limit;
+
+        $repository = $this->em->getRepository(Book::class);
+        $qb = $repository->createQueryBuilder('b')
             ->where('b.title LIKE :query')
             ->orWhere('b.author LIKE :query')
-            ->setParameter('query', '%' . $query . '%')
+            ->setParameter('query', '%' . $query . '%');
+
+        // Clonamos para contar el total antes de aplicar limit/offset
+        $totalBooks = count((clone $qb)->getQuery()->getResult());
+
+        $books = $qb->orderBy('b.id', 'DESC')
+            ->setFirstResult($offset)
+            ->setMaxResults($limit)
             ->getQuery()
             ->getResult();
 
@@ -394,6 +429,10 @@ final class BookController extends AbstractController
             $results[] = $book->toArray();
         }
 
-        return new JsonResponse($results);
+        return new JsonResponse([
+            'books' => $results,
+            'total' => $totalBooks,
+            'totalPages' => ceil($totalBooks / $limit)
+        ]);
     }
 }
