@@ -365,3 +365,25 @@ Al integrar la paginación, detectamos y solucionamos **dos errores lógicos cl�
 - En React, el estado en pantalla no siempre debe ser la única fuente de la verdad para generar filtros.
 - Pasar funciones de recarga (`fetchFilters`) hacia los componentes hijos es un patrón muy limpio para mantener el estado global sincronizado sin usar herramientas complejas como Redux.
 - Al cambiar la forma en la que una aplicación obtiene sus datos (como añadir paginación), siempre hay que auditar las funciones secundarias (búsqueda, filtros) para ver cómo les afecta el nuevo flujo.
+
+---
+
+## 💅 Paso 13: Sincronización Visual y Componentes Controlados (Bugfixing)
+
+Al probar la aplicación para la presentación final, detectamos dos errores de Experiencia de Usuario (UX) comunes en React que "atascaban" la aplicación:
+
+### 1. El Bug de los Selectores Atascados
+**El Problema:** Al filtrar por una categoría (ej: "Fantasía") y luego hacer clic en "Todos los libros", **la lista inferior de libros se quedaba totalmente atascada** y no volvía a mostrar el catálogo completo. Además, la etiqueta desplegable `<select>` se quedaba visualmente clavada en "Fantasía". Todo esto ocurría por una combinación de menús "no controlados" por React y el fallo del botón descrito en el punto 2.
+**La Solución (Componentes Controlados):** Creamos dos pequeños estados en `App.jsx` (`selectedCategory` y `selectedYear`). Los vinculamos directamente al atributo `value` de los `<select>` correspondientes. Así, cuando el usuario pulsa "Todos los libros", simplemente hacemos `setSelectedCategory("all")` y los selectores vuelven automáticamente a su estado original, mientras forzamos una nueva carga de la primera página.
+
+### 2. El Bug del Ratón (Eventos en onClick)
+**El Problema:** El botón "Todos los libros" tenía el código `<button onClick={fetchAllBooks}>`. Al hacer clic, React inyectaba el "evento del clic del ratón" (`SyntheticEvent`) en el primer parámetro de la función. Como la función esperaba un número de página (`page`), acababa enviando `[object Object]` a Symfony, lo que colgaba la aplicación.
+**La Solución:** Cambiamos el botón por una función flecha anónima `<button onClick={() => { setCurrentPage(1); fetchAllBooks(1); }}>`. De este modo, evitamos que se pase el evento del clic y aseguramos que siempre enviamos un número entero a nuestro backend.
+
+### 3. Sincronización al Añadir Libros
+**El Problema:** Al añadir un libro, este se sumaba visualmente al fondo de la página actual, rompiendo la lógica del límite de 12 libros por página y desincronizándose del ordenamiento real del backend (que manda los más nuevos al principio).
+**La Solución:** En el callback `onBookAdded`, en lugar de sumar el libro al array localmente, forzamos un refresco (`fetchAllBooks(1)`). Así, el usuario ve instantáneamente su nuevo libro en la primera posición.
+
+**Puntos clave aprendidos:**
+- En React, todos los inputs y selects deben ser siempre **Componentes Controlados** (atar su `value` a una variable de estado) para garantizar que lo que ve el usuario coincide con la memoria de la aplicación.
+- ¡Cuidado con la abreviatura `onClick={funcion}`! Si tu función espera parámetros, envuélvela siempre en una *arrow function* (`onClick={() => funcion()}`).

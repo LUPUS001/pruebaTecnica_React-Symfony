@@ -14,6 +14,8 @@ function App() {
     const [selectedBook, setSelectedBook] = useState(null);
     const [allCategories, setAllCategories] = useState([]);
     const [allYears, setAllYears] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState("all"); // Estado para la categoría seleccionada
+    const [selectedYear, setSelectedYear] = useState("all"); // Estado para el año seleccionado
     const [viewMode, setViewMode] = useState("all"); // "all" o "mine"
     const [editingBook, setEditingBook] = useState(null); // Libro que se está editando
     const [searchQuery, setSearchQuery] = useState(""); // Estado para el buscador (le indica a React que abra el formulario para editar los datos del libro)
@@ -52,6 +54,11 @@ function App() {
             setBooks(data.books || []); // books = array de libros
             setTotalPages(data.total_pages || 1); // total_pages = número total de páginas
             setViewMode("all"); // all = todos los libros
+            
+            // Reseteamos visualmente los filtros para que coincidan con la vista de todos los libros
+            setSelectedCategory("all");
+            setSelectedYear("all");
+            setSearchQuery("");
         } catch (error) {
             console.error(error);
         }
@@ -153,6 +160,10 @@ function App() {
 
     const handleCategoryChange = (e) => {
         const category = e.target.value; // e.target.value es el valor que se selecciona en el menú desplegable (por ejemplo, "Fantasía", "Ciencia Ficción", etc.)
+        
+        setSelectedCategory(category); // Actualizamos visualmente el menú desplegable de categoría
+        setSelectedYear("all"); // Reseteamos el menú del año para evitar cruces
+        setSearchQuery(""); // Reseteamos la búsqueda
 
         if (category === "all") { // Si el usuario selecciona "all", llamamos a la función fetchAllBooks para que muestre todos los libros
             // Al cambiar de filtro, siempre reseteamos a la página 1 para evitar quedarnos en una página 
@@ -174,6 +185,11 @@ function App() {
 
     const handleYearChange = (e) => {
         const yearSelected = e.target.value;
+        
+        setSelectedYear(yearSelected); // Actualizamos visualmente el menú desplegable del año
+        setSelectedCategory("all"); // Reseteamos el menú de categorías para evitar cruces
+        setSearchQuery(""); // Reseteamos la búsqueda
+
         if (yearSelected === "all") {
             // Reseteamos a la página 1 por seguridad para asegurar que siempre haya resultados visibles
             setCurrentPage(1); // Volvemos a la primera página
@@ -186,6 +202,10 @@ function App() {
     const handleSearch = async (e) => {
         const query = e.target.value;
         setSearchQuery(query);
+        
+        // Reseteamos los menús desplegables visualmente al buscar texto
+        setSelectedCategory("all");
+        setSelectedYear("all");
 
         // Si el buscador se queda vacío (o solo tiene espacios), reseteamos la vista al catálogo completo
         if (query.trim() === "") {
@@ -259,18 +279,18 @@ function App() {
                     className="search-input"
                 />
 
-                <button onClick={fetchAllBooks} className="filter-button secondary">
+                <button onClick={() => { setCurrentPage(1); fetchAllBooks(1); }} className="filter-button secondary">
                     Todos los libros
                 </button>
 
-                <select onChange={handleCategoryChange} className="filter-select">
+                <select value={selectedCategory} onChange={handleCategoryChange} className="filter-select">
                     <option value="all">Todas las categorías</option>
                     {allCategories.map((cat) => (
                         <option key={cat} value={cat}>{cat}</option>
                     ))}
                 </select>
 
-                <select onChange={handleYearChange} className="year-select">
+                <select value={selectedYear} onChange={handleYearChange} className="year-select">
                     <option value="all">Todos los años</option>
                     {allYears.map((yearSelected) => (
                         <option key={yearSelected} value={yearSelected}>{yearSelected}</option>
@@ -288,7 +308,14 @@ function App() {
                             fetchFilters(); // Recargamos categorías/años por si se importan nuevas
                         }} />
                         <button
-                            onClick={viewMode === "all" ? fetchMyBooks : fetchAllBooks}
+                            onClick={() => {
+                                if (viewMode === "all") {
+                                    fetchMyBooks();
+                                } else {
+                                    setCurrentPage(1);
+                                    fetchAllBooks(1);
+                                }
+                            }}
                             className={`view-mode-button ${viewMode === "mine" ? "active" : "inactive"}`}
                         >
                             {viewMode === "all" ? "Mis Libros" : "Catálogo Global"}
@@ -300,10 +327,11 @@ function App() {
             {/* Los selectores ahora están dentro del toolbar de arriba */}
 
             {/* Formulario para agregar un nuevo libro - SOLO PARA LOGUEADOS */}
-            {user && <BookAdd onBookAdded={(newBook) => { // (*2) newBook es el libro que acabamos de crear
-                // Si estamos viendo todo el catálogo, añadimos el libro a la lista en pantalla
+            {user && <BookAdd onBookAdded={() => { // (*2) el libro que acabamos de crear se recargará desde el servidor
+                // Al añadir un libro, recargamos la primera página para que aparezca arriba del todo
                 if (viewMode === "all") {
-                    setBooks((prevBooks) => [...prevBooks, newBook]); // prevBooks = libros anteriores + nuevo libro
+                    setCurrentPage(1);
+                    fetchAllBooks(1);
                 } else {
                     // Si estamos en "Mis Libros", recargamos la lista desde el servidor
                     fetchMyBooks();
