@@ -3,17 +3,23 @@
 .app-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 40px 20px;
+    /* Aumentado el padding vertical para dar más aire */
 }
 
 /* Header & Detalles del libro seleccionado */
 .app-header {
-    background-color: #f0f0f0;
-    padding: 20px;
-    margin-bottom: 20px;
+    background-color: var(--fondo-tarjeta);
+    padding: 30px;
+    margin-bottom: 30px;
     display: flex;
     align-items: flex-start;
-    min-height: 180px;
+    min-height: 200px;
+    border-radius: var(--radio-grande);
+    /* Esquinas redondeadas */
+    box-shadow: var(--sombra-mediana);
+    /* Sombra suave para separar del fondo */
+    border: 1px solid var(--color-borde);
 }
 
 
@@ -22,13 +28,18 @@
 }
 
 .selected-book-info h2 {
-    margin: 0 0 10px 0;
-    font-size: 1.4em;
+    margin: 0 0 12px 0;
+    /*margen inferior, usamos margin y no margin-bottom para que no haya margen arriba ni a los lados */
+    font-size: 1.8em;
+    /* Tamaño del título del libro seleccionado */
+    font-weight: 700;
+    /* para que el título se vea más grande y en negrita */
 }
 
 .selected-book-info p {
-    margin: 5px 0;
-    font-size: 0.95em;
+    margin: 8px 0;
+    font-size: 1em;
+    color: var(--texto-secundario);
 }
 
 
@@ -66,23 +77,25 @@ section {
 
 /* Estilos para los mensajes de error */
 .error-messages {
-    background-color: #ffeaea;
-    border: 1px solid #ff4d4d;
-    padding: 10px;
-    border-radius: 5px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    padding: 12px;
+    border-radius: var(--radio-pequeno);
+    color: #991b1b;
     list-style-position: inside;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    font-size: 0.9em;
 }
 
-/* Estilos para el mensaje de éxito */
 .success-message {
-    background-color: #eaffea;
-    border: 1px solid #4dff4d;
-    color: #1a5a1a;
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 15px;
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+    padding: 12px;
+    border-radius: var(--radio-pequeno);
+    margin-bottom: 20px;
     font-weight: 600;
+    font-size: 0.9em;
 }
 
 
@@ -113,31 +126,57 @@ section {
 }
 
 .book-add-button {
-    padding: 8px 16px;
-    background-color: #000;
+    padding: 10px 24px;
+    background: var(--morado-original);
+    /* Uso del color de marca */
     color: #fff;
     font-weight: 600;
     cursor: pointer;
-    border-radius: 15px;
+    border-radius: 100px;
+    border: none;
+    transition: var(--transicion);
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);
+    /* Sombra con color para efecto de brillo */
+}
+
+.book-add-button:hover {
+    background: var(--morado-hover);
+    transform: translateY(-2px);
+    /* Se mueve hacia arriba 2px */
+
+    /* Efecto de elevación */
+    box-shadow: 0 6px 15px rgba(79, 70, 229, 0.4);
 }
 
 /* Cuadrícula de libros (Grid) */
 /* Crea una cuadrícula que organiza los libros en columnas según el ancho de la pantalla disponible */
 .books-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    grid-column-gap: 20px;
-    grid-row-gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-gap: 30px;
     padding: 0;
     list-style: none;
 }
 
 .book-card-item {
-    border: 1px solid #ddd;
-    padding: 15px;
+    background-color: var(--fondo-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: var(--radio-mediano);
+    padding: 20px;
     display: flex;
     align-items: center;
     cursor: pointer;
+    transition: var(--transicion);
+    box-shadow: var(--sombra-pequena);
+}
+
+.book-card-item:hover {
+    transform: translateY(-5px);
+    /* Efecto de "flotación" al pasar el ratón */
+    box-shadow: var(--sombra-grande);
+    /* Sombra más profunda al hover */
+    border-color: var(--morado-original);
+    /* Resalte de borde con color primario */
 }
 
 /* Contenedor de la imagen del libro seleccionado */
@@ -339,87 +378,117 @@ section {
 }
 
 .book-card-title {
-    margin: 0 0 5px 0;
-    font-size: 1.1em;
+    margin: 0 0 4px 0;
+    font-size: 1.15em;
+    font-weight: 600;
+    color: var(--texto-principal);
 }
 
 .book-card-subtitle {
     font-size: 0.9em;
-    color: #666;
-    margin-bottom: 5px;
+    color: var(--texto-secundario);
+    margin-bottom: 8px;
+    font-weight: 400;
 }
 
 /* Toolbar y Filtros - VERSIÓN FINAL PIXEL PERFECT */
 .toolbar {
-    background: #fff;
-    padding: 10px 20px;
-    border-radius: 50px;
-    /* Forma de píldora moderna */
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    margin: 20px auto 30px auto;
+    background: var(--fondo-tarjeta);
+    padding: 12px 24px;
+    border-radius: 100px;
+    /* Forma de píldora (redondeado en semicirculos) */
+    box-shadow: var(--sombra-mediana);
+    /* Sombra de la tarjeta */
+
+    margin: 20px auto 40px auto;
+    /* Arriba y abajo 20px, izquierda y derecha 40px (auto se adapta al ancho del navegador y lo mantiene centrado) */
+
     display: flex;
     align-items: center;
-    gap: 12px;
-    border: 1px solid #eee;
+    gap: 15px;
+    /* Espacio entre elementos */
+
+    border: 1px solid var(--color-borde);
+    /* Ajusta el ancho para que quepa el contenido */
     width: fit-content;
-    /* Se ajusta al contenido para no verse estirado */
-    max-width: 95%;
+    max-width: 100%;
 }
 
 .search-input {
-    width: 450px;
-    height: 48px;
-    padding: 0 25px;
-    border: 2px solid #e0e0e0;
-    border-radius: 25px;
-    font-size: 1em;
+    width: 400px;
+    height: 44px;
+    padding: 0 20px;
+    border: 1px solid var(--color-borde);
+    border-radius: 100px;
+    font-size: 0.95em;
     outline: none;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    /* Sombra para dar profundidad */
+    transition: var(--transicion);
+    background-color: #f1f5f9;
+    /* Fondo sutil para el input */
 }
 
+/* Es ese anillo morado que aparece alrededor del input/buscador cuando el usuario hace clic en él.  */
 .search-input:focus {
-    border-color: #3498db;
-    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.15);
+    /* :focus -> pseudo-clase que se aplica cuando el usuario hace clic en el input */
+
+    /* Color del borde */
+    border-color: var(--morado-original);
+    /* Color del fondo */
     background-color: #fff;
+    /* Anillo/halo de enfoque suave */
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    /* La sombra se crea 4px alrededor del input con una opacidad del 10%
+       0 0 0: Los tres primeros ceros significan que la sombra no se mueve a la derecha, ni abajo, ni tiene difuminado.
+       4px: Este es el truco. Es la expansión. Crea una capa sólida que crece 4 píxeles hacia afuera en todas direcciones.
+       rgba(..., 0.1): Es un color morado muy, muy transparente (solo un 10% de opacidad).  
+       
+       ¿Por qué se usa box-shadow en lugar de border?
+
+            Porque el border está ocupando espacio físico en el contenedor.
+            Si sumas: 1px (borde izquierdo) + 400px (ancho del contenido) + 1px (borde derecho), ocupas exactamente 402px. 
+            El contenedor está diseñado para medir 402px. Si le metes un border-left de 20px, rompe ese ancho y causa overflow.
+            
+            En cambio, box-shadow se dibuja "encima" del contenido sin alterar las dimensiones.
+    */
 }
 
+/* Botón de filtrar */
 .filter-button.secondary {
-    height: 42px;
-    padding: 0 15px;
-    background: #f8f9fa;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    color: #555;
+    height: 44px;
+    padding: 0 18px;
+    background: #f1f5f9;
+    border: 1px solid var(--color-borde);
+    border-radius: 100px;
+    color: var(--texto-principal);
     font-weight: 500;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s;
+    transition: var(--transicion);
 }
 
 .filter-button.secondary:hover {
-    background: #fff;
-    border-color: #3498db;
-    color: #3498db;
+    background: #e2e8f0;
+    border-color: #cbd5e1;
 }
 
 .filter-select,
 .year-select {
-    height: 42px;
+    height: 44px;
     padding: 0 15px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    background: #fff;
-    color: #555;
+    border: 1px solid var(--color-borde);
+    border-radius: 100px;
+    background: #f1f5f9;
+    color: var(--texto-principal);
     outline: none;
     cursor: pointer;
-    min-width: 150px;
+    min-width: 140px;
+    font-weight: 500;
+    transition: var(--transicion);
 }
 
 .filter-select:hover,
 .year-select:hover {
-    border-color: #3498db;
+    border-color: var(--morado-original);
 }
 
 .toolbar-user-actions {
@@ -472,15 +541,15 @@ section {
 }
 
 .book-edit-modal {
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 30px;
-    border-radius: 16px;
+    background-color: var(--fondo-tarjeta);
+    padding: 40px;
+    border-radius: var(--radio-grande);
     width: 90%;
-    max-width: 600px;
+    max-width: 550px;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: var(--sombra-grande);
+    border: 1px solid var(--color-borde);
 }
 
 .book-edit-modal h3 {
@@ -653,18 +722,21 @@ section {
 
 /* Estados dinámicos para el botón de cambio de vista (Mis Libros / Catálogo) */
 .view-mode-button.active {
-    background-color: #3498db;
-    /* Azul para el modo activo */
+    /* Cuando el botón está activo, pasa de tener el color de fondo gris a tener el color de fondo morado */
+    background-color: var(--morado-original);
 }
 
 .view-mode-button.inactive {
-    background-color: #6c757d;
-    /* Gris para el modo inactivo */
+    /* Cuando el botón está inactivo, pasa de tener el color de fondo morado a tener el color de fondo gris */
+    background-color: #f1f5f9;
+    color: var(--texto-secundario);
+    border: 1px solid var(--color-borde);
 }
 
 .view-mode-button:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+    transform: translateY(-2px);
+    /* El botón se mueve 2 píxeles hacia arriba */
+    box-shadow: var(--sombra-mediana);
 }
 
 /* Contenedor del botón de importar JSON */

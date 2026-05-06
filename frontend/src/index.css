@@ -1,17 +1,108 @@
-/* index.css - Estilos básicos */
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  min-width: 320px;
-  min-height: 100vh;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+/* Importamos Google Fonts para usar las fuentes Inter y Outfit */
+
+:root {
+  /* Colores de fondos y textos */
+  --morado-original: #4f46e5;
+  --morado-hover: #4338ca;
+  --fondo-pagina: #f1f5f9;
+  /* Cambiado a un gris un poco más oscuro para dar contraste */
+  --fondo-tarjeta: #ffffff;
+  --texto-principal: #1e293b;
+  --texto-secundario: #475569;
+  /* Texto secundario un poco más oscuro para legibilidad */
+  --color-borde: #cbd5e1;
+  /* Borde un poco más marcado */
+
+  /* Bordes y sombras */
+  --radio-pequeno: 8px;
+  --radio-mediano: 12px;
+  --radio-grande: 16px;
+  --sombra-pequena: 0 1px 3px 0 rgb(0 0 0 / 0.15), 0 1px 2px -1px rgb(0 0 0 / 0.15);
+
+  /* 
+  1ª Sombra: 0 1px 3px 0 rgb(0 0 0 / 0.1)
+        Esta es la sombra principal, la que da la "altura":
+
+        0: Desplazamiento a la derecha (está centrada).
+        1px: Desplazamiento hacia abajo (muy poquito, para que parezca que la luz viene de arriba).
+        3px: Difuminado (blur). Es cuánto se "emborrona" la sombra.
+        0: Extensión. Indica si la sombra debe ser más grande que el objeto (en este caso, no).
+        rgb(0 0 0 / 0.1): El color. Es Negro (0 0 0) con una opacidad del 10% (/ 0.1). Esto hace que sea casi invisible, muy elegante.
+     
+  2ª Sombra: 0 1px 2px -1px rgb(0 0 0 / 0.1)
+        Esta es la sombra de "detalle", sirve para que el borde se vea nítido:
+
+        -1px: (El cuarto número). Es una extensión negativa. Esto hace que la sombra se "encoja" un poco hacia dentro, 
+              evitando que se vea borrosa en las esquinas. 
+  */
+  --sombra-mediana: 0 4px 10px -1px rgb(0 0 0 / 0.18), 0 2px 6px -2px rgb(0 0 0 / 0.12);
+  --sombra-grande: 0 12px 25px -5px rgb(0 0 0 / 0.22), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  /* Animaciones */
+  --transicion: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* 
+  1. all (Qué cambia)
+      Indica que todas las propiedades que cambien deben animarse. Si el botón cambia de color de fondo, de color de texto y de tamaño a la vez, el navegador animará los tres cambios suavemente.
+
+  2. 0.2s (Cuánto tarda)
+      Es la duración: 0.2 segundos.
+
+      Si fuera 1s, la animación sería muy lenta y pesada.
+      Si fuera 0s, el cambio sería instantáneo (sin animación).
+      0.2s es el "punto dulce": lo suficientemente rápido para que la app se sienta ágil, pero lo suficiente para que el ojo humano note la suavidad.
+  
+  3. cubic-bezier(0.4, 0, 0.2, 1) (Cómo acelera)
+      Esta es la parte más "mágica". En lugar de que la animación sea lineal (como un robot que se mueve siempre a la misma velocidad), el Cubic Bezier define una curva de aceleración.
+
+      Esta curva específica (0.4, 0, 0.2, 1) se llama técnicamente "Standard Easing":
+
+      Empieza rápido: Capta tu atención de inmediato.
+      Frena suavemente: Al final, se ralentiza un poco para que el objeto "aterrice" con suavidad en su posición final.
+
+    Analogía: Imagina que empujas una puerta. No se mueve a la misma velocidad todo el rato; primero aceleras tú con el brazo y luego la puerta se va frenando sola hasta que se cierra. Eso es lo que imitan estos números: el movimiento natural de la vida real.
+*/
 }
 
-h1 {
-  font-size: 2.5em;
-  margin: 20px 0;
+body {
+  margin: 0;
+  /* Tipo de letra para el cuerpo de la página */
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  /* 
+  Para que el navegador sepa en qué orden buscar fuentes en mi ordenador 
+    - Inter -> fuente que hemos importado desde Google Fonts (si no encuentra esta fuente, busca la siguiente 'system-ui') 
+    - system-ui -> fuente del sistema operativo (si no lo carga, busca la siguiente '-apple-system') 
+    - -apple-system -> fuente de Apple específico para MAC e IOS (usa la fuente San Francisco) 
+    - sans-serif -> fuente genérica sans-serif */
+
+  /* Color de fondo */
+  background-color: var(--fondo-pagina);
+  /* Color del texto */
+  color: var(--texto-principal);
+
+  /* Altura de línea (espacio vertical entre líneas de texto, si fuera 1 sería sin espacio, 1.5 es el doble de espacio) */
+  line-height: 1.5;
+
+  /* Suavizado de fuentes, son ajustes específicos de navegadores para controlar cómo se renderizan 
+      las fuentes en pantalla (la diferencia es casi imperceptible) */
+  -webkit-font-smoothing: antialiased;
+  /* Esta propiedad se utiliza en Safari y Chrome para que las fuentes se vean más suaves */
+  -moz-osx-font-smoothing: grayscale;
+  /* Esta propiedad se utiliza en Firefox para que las fuentes se vean más suaves */
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'Outfit', sans-serif;
+  color: var(--texto-principal);
 }
 
 button {
+  font-family: inherit;
+  /* inherit es una propiedad que hace que un elemento herede el valor de su elemento padre (en este caso, el body)*/
+  transition: var(--transicion);
   padding: 8px 16px;
   cursor: pointer;
   background-color: #f0f0f0;
@@ -22,3 +113,36 @@ button {
 button:hover {
   background-color: #e0e0e0;
 }
+
+/* 
+
+En App.css se usa var() para definir variables CSS.
+
+¿Qué es `var(...)`? 
+  Imagínatelo como una "etiqueta" o un "alias". En lugar de escribir el código del color (ej: `#4f46e5`) 
+  50 veces por todo el archivo, lo guardamos en un sitio central con un nombre fácil de recordar.
+
+-  --primary: Es el nombre que le hemos dado al color (como una caja donde guardamos el color azul).
+-  var(--primary): Es como decirle al navegador: "Oye, ve a la caja que se llama '--primary' y usa el color que haya dentro".
+
+¿Por qué lo he puesto así?
+  Es la forma "profesional" de hacerlo por dos razones:
+  1.  Limpieza: Es más fácil leer color: var(--primary o --morado-original) que color: #4f46e5.
+  2.  Cambio Rápido: Si mañana decides que prefieres el color verde en vez de azul, solo tienes que cambiar una línea en el archivo index.css y toda la aplicación se actualizará de golpe. Si estuviera escrito a mano, tendrías que ir línea por línea buscando el código.
+
+---
+
+La parte del header con estos cambios es:
+
+  .app-header {
+      background-color: var(--fondo-tarjeta);
+      border-radius: var(--radio-grande);
+  }
+
+Valores "NORMALES" (los que usualmente usaríamos en código) 
+  .app-header {
+      background-color: #ffffff; Blanco 
+      border-radius: 16px;      16 píxeles de redondeado 
+  }
+
+*/
